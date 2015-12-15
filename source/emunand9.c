@@ -165,59 +165,31 @@ u32 InjectNand(u32 param)
         return 1;
     }
     
-    Debug("Injecting file to %sNAND (%uMB)...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
-
     u32 n_sectors = nand_size / NAND_SECTOR_SIZE;
-    for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
-        u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
-        ShowProgress(i, n_sectors);
-        if(!DebugFileRead(buffer, NAND_SECTOR_SIZE * read_sectors, i * NAND_SECTOR_SIZE)) {
-            result = 1;
-            break;
+    if (param & N_DIRECTCOPY) {
+        Debug("Cloning SysNAND to EmuNAND (%uMB)", nand_size / (1024 * 1024));
+        for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
+            u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
+            ShowProgress(i, n_sectors);
+            ReadNandSectors(i, read_sectors, buffer, false);
+            WriteNandSectors(i, read_sectors, buffer, true);
         }
-        WriteNandSectors(i, read_sectors, buffer, use_emunand);
+    } else {
+        Debug("Injecting file to %sNAND (%uMB)...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
+        for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
+            u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
+            ShowProgress(i, n_sectors);
+            if(!DebugFileRead(buffer, NAND_SECTOR_SIZE * read_sectors, i * NAND_SECTOR_SIZE)) {
+                result = 1;
+                break;
+            }
+            WriteNandSectors(i, read_sectors, buffer, use_emunand);
+        }
+        FileClose();
     }
-
     ShowProgress(0, 0);
-    FileClose();
 
     return result;
-}
-
-u32 CloneSysNand(u32 param)
-{
-    u8* buffer = BUFFER_ADDRESS;
-    u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
-    
-   if (!(param & N_NOCONFIRM)) switch(CheckEmuNand()) {
-        case RES_EMUNAND_NOT_READY:
-            Debug("SD card is not formatted for EmuNAND");
-            Debug("Format it first using the Format Menu");
-            return 1;
-        case RES_EMUNAND_READY:
-            break;
-        default:
-            Debug("There is already an EmuNAND on this SD");
-            Debug("If you continue, it will be overwritten");
-            Debug("If you wish to proceed, enter:");
-            Debug(unlockText);
-            Debug("(B to cancel)");
-            if (CheckSequence(unlockSequence, sizeof(unlockSequence) / sizeof(u32)) != 0)
-                return 2;
-            Debug("");
-    }
-    
-    Debug("Cloning SysNAND to EmuNAND (%uMB)", nand_size / (1024 * 1024));
-    u32 n_sectors = nand_size / NAND_SECTOR_SIZE;
-    for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
-        u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
-        ShowProgress(i, n_sectors);
-        ReadNandSectors(i, read_sectors, buffer, false);
-        WriteNandSectors(i, read_sectors, buffer, true);
-    }
-    ShowProgress(0, 0);
-    
-    return 0;
 }
 
 u32 FormatSdCard(u32 param)

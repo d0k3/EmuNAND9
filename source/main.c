@@ -19,7 +19,7 @@ MenuInfo menu[] =
         {
             { "Complete EmuNAND Setup",       &CompleteSetupEmuNand,  0 },
             { "SD Format Options...",         NULL,                   SUBMENU_START + 0 },
-            { "EmuNAND Inject Options...",    NULL,                   SUBMENU_START + 1 }
+            { "EmuNAND Manager Options...",   NULL,                   SUBMENU_START + 1 }
         }
     },
     {
@@ -32,13 +32,13 @@ MenuInfo menu[] =
         }
     },
     {
-        "EmuNAND Inject Options", 5,
+        "EmuNAND Manager Options", 5,
         {
-            { "Clone SysNAND to EmuNAND",     &CloneSysNand,          0 },
-            { "Dump SysNAND to NAND.bin",     &DumpNand,              0 },
-            { "Dump EmuNAND to EmuNAND.bin",  &DumpNand,              N_EMUNAND },
+            { "Clone SysNAND to EmuNAND",     &CloneSysNand,          N_EMUNAND | N_DIRECTCOPY },
             { "Clone NAND.bin to EmuNAND",    &InjectNand,            N_EMUNAND },
-            { "Clone EmuNAND.bin to EmuNAND", &InjectNand,            N_EMUNAND | N_EMUNANDBIN }
+            { "Clone EmuNAND.bin to EmuNAND", &InjectNand,            N_EMUNAND | N_EMUNANDBIN },
+            { "Dump SysNAND to NAND.bin",     &DumpNand,              0 },
+            { "Dump EmuNAND to EmuNAND.bin",  &DumpNand,              N_EMUNAND }
         }
     },
     {
