@@ -10,8 +10,9 @@
 #define SD_SETUP_EMUNAND (1<<0)
 #define SD_USE_STARTER   (1<<1)
 
-#define I_EMUNANDBIN     (1<<0)
-#define N_EMUNAND        (1<<1)
+#define N_EMUNAND        (1<<0)
+#define N_EMUNANDBIN     (1<<1)
+#define N_NOCONFIRM      (1<<2)
 
 typedef struct {
     u8  status;         // 0x80
@@ -36,5 +37,4 @@ u32 DumpNand(u32 param);
 u32 InjectNand(u32 param);
 u32 CloneSysNand(u32 param);
 u32 FormatSdCard(u32 param);
-
 u32 CompleteSetupEmuNand(u32 param);

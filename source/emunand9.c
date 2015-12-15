@@ -14,14 +14,20 @@
 #define PARTITION_ALIGN     ((4 * 1024 * 1024) / 0x200)     // align at 4MB
 #define MAX_STARTER_SIZE    (16 * 1024 * 1024)              // allow to take over max 16MB boot.3dsx
 
+static u32 emunand_header = 0;
+static u32 emunand_offset = 0;
+
 u32 unlockSequence[] = { BUTTON_DOWN, BUTTON_UP, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_A };
 const char* unlockText = "<Down>, <Up>, <Left>, <Right>, <A>";
-
 
 u32 CheckEmuNand(void)
 {
     u8* buffer = (u8*) 0x20316200;
     u32 nand_size_sectors = getMMCDevice(0)->total_size;
+    
+    // also set the EmuNAND header / offset here
+    emunand_header = 0;
+    emunand_offset = 0;
     
     // check the MBR for presence of EmuNAND
     sdmmc_sdcard_readsectors(0, 1, buffer);
@@ -30,13 +36,19 @@ u32 CheckEmuNand(void)
     
     // check for Gateway type EmuNAND
     sdmmc_sdcard_readsectors(nand_size_sectors, 1, buffer);
-    if (memcmp(buffer + 0x100, "NCSD", 4) == 0)
+    if (memcmp(buffer + 0x100, "NCSD", 4) == 0) {
+        emunand_header = nand_size_sectors;
+        emunand_offset = 0;
         return RES_EMUNAND_GATEWAY;
+    }
     
     // check for RedNAND type EmuNAND
     sdmmc_sdcard_readsectors(1, 1, buffer);
-    if (memcmp(buffer + 0x100, "NCSD", 4) == 0)
-        return RES_EMUNAND_GATEWAY;
+    if (memcmp(buffer + 0x100, "NCSD", 4) == 0) {
+        emunand_header = 1;
+        emunand_offset = 1;
+        return RES_EMUNAND_REDNAND;
+    }
         
     // EmuNAND ready but not set up
     return RES_EMUNAND_READY;
@@ -45,8 +57,7 @@ u32 CheckEmuNand(void)
 static inline int ReadNandSectors(u32 sector_no, u32 numsectors, u8 *out, bool use_emunand)
 {
     if (use_emunand) {
-        static u32 emunand_header = 0;
-        if (!emunand_header) emunand_header = getMMCDevice(0)->total_size;
+        if (!emunand_header) CheckEmuNand();
         if (sector_no == 0) {
             int errorcode = sdmmc_sdcard_readsectors(emunand_header, 1, out);
             if (errorcode) return errorcode;
@@ -54,15 +65,17 @@ static inline int ReadNandSectors(u32 sector_no, u32 numsectors, u8 *out, bool u
             numsectors--;
             out += 0x200;
         }
-        return sdmmc_sdcard_readsectors(sector_no, numsectors, out);
+        return sdmmc_sdcard_readsectors(sector_no + emunand_offset, numsectors, out);
     } else return sdmmc_nand_readsectors(sector_no, numsectors, out);
 }
 
 static inline int WriteNandSectors(u32 sector_no, u32 numsectors, u8 *in, bool use_emunand)
 {
     if (use_emunand) {
-        static u32 emunand_header = 0;
-        if (!emunand_header) emunand_header = getMMCDevice(0)->total_size;
+        if (emunand_header <= 1) {
+            emunand_header = getMMCDevice(0)->total_size;
+            emunand_offset = 0;
+        }
         if (sector_no == 0) {
             int errorcode = sdmmc_sdcard_writesectors(emunand_header, 1, in);
             if (errorcode) return errorcode;
@@ -70,7 +83,7 @@ static inline int WriteNandSectors(u32 sector_no, u32 numsectors, u8 *in, bool u
             numsectors--;
             in += 0x200;
         }
-        return sdmmc_sdcard_writesectors(sector_no, numsectors, in);
+        return sdmmc_sdcard_writesectors(sector_no + emunand_offset, numsectors, in);
     } else return 0; // return sdmmc_nand_writesectors(sector_no, numsectors, in);
     // SysNAND write stubbed - not needed here, no need to take the risk
 }
@@ -82,7 +95,12 @@ u32 DumpNand(u32 param)
     bool use_emunand = (param & N_EMUNAND);
     u32 result = 0;
 
-    Debug("Dumping %sNAND (%uMB)", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
+    if (CheckEmuNand() <= RES_EMUNAND_READY) {
+        Debug("EmuNAND not found on SD card");
+        return 1;
+    }
+    
+    Debug("Dumping %sNAND (%uMB) to file...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
 
     if (!DebugFileCreate((use_emunand) ? "EmuNAND.bin" : "NAND.bin", true))
         return 1;
@@ -112,7 +130,7 @@ u32 InjectNand(u32 param)
     u32 result = 0;
     u8 magic[4];
     
-    if (use_emunand) switch(CheckEmuNand()) {
+    if (use_emunand && (!(param & N_NOCONFIRM))) switch(CheckEmuNand()) {
         case RES_EMUNAND_NOT_READY:
             Debug("SD card is not formatted for EmuNAND");
             Debug("Format it first using the Format Menu");
@@ -122,16 +140,15 @@ u32 InjectNand(u32 param)
         default:
             Debug("There is already an EmuNAND on this SD");
             Debug("If you continue, it will be overwritten");
-            Debug("");
             Debug("If you wish to proceed, enter:");
             Debug(unlockText);
-            Debug("(B to cancel this operation)");
+            Debug("(B to cancel)");
             if (CheckSequence(unlockSequence, sizeof(unlockSequence) / sizeof(u32)) != 0)
                 return 2;
             Debug("");
     }
         
-    if (!DebugFileOpen((param & I_EMUNANDBIN) ? "EmuNAND.bin" :"NAND.bin"))
+    if (!DebugFileOpen((param & N_EMUNANDBIN) ? "EmuNAND.bin" :"NAND.bin"))
         return 1;
     if (nand_size != FileGetSize()) {
         FileClose();
@@ -148,7 +165,7 @@ u32 InjectNand(u32 param)
         return 1;
     }
     
-    Debug("Injecting file to %sNAND (%uMB)", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
+    Debug("Injecting file to %sNAND (%uMB)...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
 
     u32 n_sectors = nand_size / NAND_SECTOR_SIZE;
     for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
@@ -172,7 +189,7 @@ u32 CloneSysNand(u32 param)
     u8* buffer = BUFFER_ADDRESS;
     u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
     
-   switch(CheckEmuNand()) {
+   if (!(param & N_NOCONFIRM)) switch(CheckEmuNand()) {
         case RES_EMUNAND_NOT_READY:
             Debug("SD card is not formatted for EmuNAND");
             Debug("Format it first using the Format Menu");
@@ -182,10 +199,9 @@ u32 CloneSysNand(u32 param)
         default:
             Debug("There is already an EmuNAND on this SD");
             Debug("If you continue, it will be overwritten");
-            Debug("");
             Debug("If you wish to proceed, enter:");
             Debug(unlockText);
-            Debug("(B to cancel this operation)");
+            Debug("(B to cancel)");
             if (CheckSequence(unlockSequence, sizeof(unlockSequence) / sizeof(u32)) != 0)
                 return 2;
             Debug("");
@@ -252,35 +268,24 @@ u32 FormatSdCard(u32 param)
     Debug("You may now switch the SD card");
     Debug("The inserted SD card will be formatted");
     Debug("All data on it will be lost!");
-    Debug("");
     Debug("If you wish to proceed, enter:");
     Debug(unlockText);
-    Debug("(B to cancel this operation)");
+    Debug("(B to cancel)");
     if (CheckSequence(unlockSequence, sizeof(unlockSequence) / sizeof(u32)) != 0)
         return 2;
     Debug("");
     InitFS();
     
     // check SD size
-    while (true) {
-        sd_size_sectors = getMMCDevice(1)->total_size;
-        if (sd_size_sectors) break;
-        DeinitFS();
-        Debug("Make sure you actually inserted an SD card");
-        Debug("(A to continue, B to cancel)");
-        while(true) {
-            u32 pad_state = InputWait();
-            if (pad_state & BUTTON_A) break;
-            else if (pad_state & BUTTON_B) return 2;
-        }
-        InitFS();
-        Debug("");
+    sd_size_sectors = getMMCDevice(1)->total_size;
+    if (!sd_size_sectors) {
+        Debug("SD card not properly detected!");
+        return 1;
     }
     
     // this is the point of no return
-    Debug("Inserted SD card info...");
-    Debug("Total Size: %lluMB", ((u64) sd_size_sectors * 0x200) / (1024 * 1024));
-    Debug("Storage: %lluMB free / %llu total", RemainingStorageSpace() / (1024*1024), TotalStorageSpace() / (1024*1024));
+    Debug("Total SD card size: %lluMB", ((u64) sd_size_sectors * 0x200) / (1024 * 1024));
+    Debug("Storage: %lluMB free / %lluMB total", RemainingStorageSpace() / (1024*1024), TotalStorageSpace() / (1024*1024));
     switch(CheckEmuNand()) {
         case RES_EMUNAND_READY:
             Debug("Already formatted for EmuNAND");
@@ -334,17 +339,17 @@ u32 FormatSdCard(u32 param)
     
     // here the actual formatting takes place
     DeinitFS();
-    Debug("Writing new master boot record..");
+    Debug("Writing new master boot record...");
     sdmmc_sdcard_writesectors(0, 1, (u8*) mbr_info);
     InitFS();
-    Debug("Formatting FAT partition... (be patient)");
+    Debug("Formatting FAT partition...");
     if (!PartitionFormat("EMUNAND9SD"))
         return 1;
     DeinitFS();
     InitFS();
     
     if (starter_size) {
-        Debug("Now writing %s...", (memcmp(buffer, "3DSX", 4) == 0) ? "boot.3dsx" : "launcher.dat");
+        Debug("Writing %s to SD card...", (memcmp(buffer, "3DSX", 4) == 0) ? "boot.3dsx" : "launcher.dat");
         if (!FileCreate((memcmp(buffer, "3DSX", 4) == 0) ? "/boot.3dsx" : "/launcher.dat", true)) {
             Debug("Failed writing to the SD card!");
             return 1;
@@ -363,6 +368,5 @@ u32 CompleteSetupEmuNand(u32 param)
 {
     u32 res = FormatSdCard(SD_SETUP_EMUNAND | SD_USE_STARTER);
     if (res != 0) return res;
-    Debug("");
-    return CloneSysNand(0);
+    return CloneSysNand(N_NOCONFIRM);
 }

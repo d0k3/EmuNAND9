@@ -38,7 +38,7 @@ MenuInfo menu[] =
             { "Dump SysNAND to NAND.bin",     &DumpNand,              0 },
             { "Dump EmuNAND to EmuNAND.bin",  &DumpNand,              N_EMUNAND },
             { "Clone NAND.bin to EmuNAND",    &InjectNand,            N_EMUNAND },
-            { "Clone EmuNAND.bin to EmuNAND", &InjectNand,            N_EMUNAND | I_EMUNANDBIN }
+            { "Clone EmuNAND.bin to EmuNAND", &InjectNand,            N_EMUNAND | N_EMUNANDBIN }
         }
     },
     {

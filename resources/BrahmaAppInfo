@@ -1,6 +1,6 @@
-APP_TITLE = Decrypt9
-APP_DESCRIPTION = Open source 3DS decryption & dumping tools.
-APP_AUTHOR = Archshift, d0k3, Shadowtrance & others
+APP_TITLE = EmuNAND9
+APP_DESCRIPTION = Open source 3DS EmuNAND format tool
+APP_AUTHOR = d0k3
 
 PAYLOAD_MEM = 1
 VOODOO = 0xF

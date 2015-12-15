@@ -17,14 +17,14 @@ PARTITION VolToPart[] = {
 
 bool InitFS()
 {
-    bool ret = (f_mount(&fs, "0:", 1) == FR_OK);
-    #ifdef WORK_DIR
-    f_chdir(WORK_DIR);
-    #endif
     #ifndef EXEC_GATEWAY
     // TODO: Magic?
     *(u32*)0x10000020 = 0;
     *(u32*)0x10000020 = 0x340;
+    #endif
+    bool ret = (f_mount(&fs, "0:", 1) == FR_OK);
+    #ifdef WORK_DIR
+    f_chdir(WORK_DIR);
     #endif
 
     return ret;
