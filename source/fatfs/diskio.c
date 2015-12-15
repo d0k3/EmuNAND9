@@ -100,13 +100,13 @@ DRESULT disk_ioctl (
 {
     switch (cmd) {
         case GET_SECTOR_SIZE:
-            *((DWORD*) buff) = 0x200;
+            *((DWORD*) buff) = 0x200; // 512 byte sectors
             return RES_OK;
         case GET_SECTOR_COUNT:
             *((DWORD*) buff) = getMMCDevice(1)->total_size;
             return RES_OK;
         case GET_BLOCK_SIZE:
-            *((DWORD*) buff) = 32768;
+            *((DWORD*) buff) = 0x2000; // 0x200 * 0x2000 = 4MB blocks
             return RES_OK;
         case CTRL_SYNC:
             // nothing to do here - the disk_write function handles that

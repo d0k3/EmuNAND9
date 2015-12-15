@@ -226,7 +226,7 @@ bool PartitionFormat(const char* label)
     bool ret = (f_mkfs("0:", 0, 0) == FR_OK);
     if (ret && label) {
         char label0[16];
-        snprintf(label0, 16, "0:%11.11s", label);
+        snprintf(label0, 16, "0:%-11.11s", label);
         f_setlabel(label0);
     }
     return ret;
