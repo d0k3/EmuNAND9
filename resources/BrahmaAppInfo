@@ -1,0 +1,6 @@
+APP_TITLE = Decrypt9
+APP_DESCRIPTION = Open source 3DS decryption & dumping tools.
+APP_AUTHOR = Archshift, d0k3, Shadowtrance & others
+
+PAYLOAD_MEM = 1
+VOODOO = 0xF
