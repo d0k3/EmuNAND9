@@ -297,10 +297,10 @@ u32 FormatSdCard(u32 param)
     sprintf(mbr_info->text, "%-*.*s%-16.16s%-8.8s%08X%-8.8s%08X%-8.8s%08X%-8.8s%08X",
         setup_emunand ? 16 : 0, setup_emunand ? 16 : 0,
         setup_emunand ? "GATEWAYNAND" : "", "EMUNAND9SD",
-        "SDSIZE :", (unsigned int) sd_size_sectors,
-        "NDSIZE :", (unsigned int) nand_size_sectors,
-        "FATOFFS:", (unsigned int) fat_offset_sectors,
-        "FATSIZE:", (unsigned int) fat_size_sectors);
+        "SDCSIZE:", (unsigned int) sd_size_sectors,
+        "NNDSIZE:", (unsigned int) nand_size_sectors,
+        "FATSIZE:", (unsigned int) fat_size_sectors,
+        "FATOFFS:", (unsigned int) fat_offset_sectors);
     mbr_info->magic         = 0xAA55;
     part_info->status       = 0x80;
     part_info->type         = 0x0C;
@@ -321,8 +321,9 @@ u32 FormatSdCard(u32 param)
     InitFS();
     
     if (starter_size) {
-        Debug("Writing %s to SD card...", (memcmp(buffer, "3DSX", 4) == 0) ? "boot.3dsx" : "launcher.dat");
-        if (!FileCreate((memcmp(buffer, "3DSX", 4) == 0) ? "/boot.3dsx" : "/launcher.dat", true)) {
+        bool is_3dsx = (memcmp(buffer, "3DSX", 4) == 0);
+        Debug("Writing %s to SD card...", (is_3dsx) ? "boot.3dsx" : "launcher.dat");
+        if (!FileCreate((is_3dsx) ? "/boot.3dsx" : "/launcher.dat", true)) {
             Debug("Failed writing to the SD card!");
             return 1;
         }
@@ -331,6 +332,7 @@ u32 FormatSdCard(u32 param)
             return 1;
         }
         FileClose();
+        Debug("Setup %s to finish autosetup", (is_3dsx) ? "*hax" : "entrypoint");
     }
     
     return 0;
@@ -340,5 +342,5 @@ u32 CompleteSetupEmuNand(u32 param)
 {
     u32 res = FormatSdCard(SD_SETUP_EMUNAND | SD_USE_STARTER);
     if (res != 0) return res;
-    return CloneSysNand(N_NOCONFIRM);
+    return InjectNand(N_EMUNAND | N_DIRECTCOPY | N_NOCONFIRM);
 }
