@@ -247,14 +247,7 @@ bool LogWrite(const char* text)
     
     if (!lready) {
         unsigned flags = FA_READ | FA_WRITE | FA_OPEN_ALWAYS;
-        #ifdef WORK_DIR
-        f_chdir(WORK_DIR);
         lready = (f_open(&lfile, LOG_FILE, flags) == FR_OK);
-        f_chdir("/");
-        if (!lready) lready = (f_open(&lfile, LOG_FILE, flags) == FR_OK);
-        #else
-        lready = (f_open(&lfile, LOG_FILE, flags) == FR_OK);
-        #endif
         if (!lready) return false;
         f_lseek(&lfile, f_size(&lfile));
         f_sync(&lfile);
