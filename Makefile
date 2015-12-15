@@ -160,6 +160,7 @@ release:
 	@-cp $(OUTPUT).smdh $(RELEASE)/3DS/$(TARGET)
 	@-cp resources/starter.bin $(RELEASE)/EmuNAND9
 	@-cp resources/starterGen/*.* $(RELEASE)/starterGen
+	@-cp Readme.md $(RELEASE)
 	@-7z a $(RELEASE)/$(TARGET)-d0k3-`date +'%Y%m%d-%H%M%S'`.zip $(RELEASE)/*
 	
 #---------------------------------------------------------------------------------

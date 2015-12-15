@@ -1,6 +1,6 @@
 # EmuNAND9Tool
-EmuNAND SD formatter & manager for the 3DS console
-aka "The last nail in the coffin of GW software for non GW users"
+Open source EmuNAND SD formatter & manager for the 3DS console
+aka. "The last nail in the coffin of GW software for non GW users"
 
 ## How to run this?
 You can only use this if your 3DS FW is <= 9.2. There are multiple ways of running this:
