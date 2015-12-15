@@ -147,23 +147,6 @@ u32 InjectNand(u32 param)
                 return 2;
             Debug("");
     }
-        
-    if (!DebugFileOpen((param & N_EMUNANDBIN) ? "EmuNAND.bin" :"NAND.bin"))
-        return 1;
-    if (nand_size != FileGetSize()) {
-        FileClose();
-        Debug("NAND dump has the wrong size!");
-        return 1;
-    };
-    if(!DebugFileRead(magic, 4, 0x100)) {
-        FileClose();
-        return 1;
-    }
-    if (memcmp(magic, "NCSD", 4) != 0) {
-        FileClose();
-        Debug("Not a proper NAND dump!");
-        return 1;
-    }
     
     u32 n_sectors = nand_size / NAND_SECTOR_SIZE;
     if (param & N_DIRECTCOPY) {
@@ -175,6 +158,22 @@ u32 InjectNand(u32 param)
             WriteNandSectors(i, read_sectors, buffer, true);
         }
     } else {
+        if (!DebugFileOpen((param & N_EMUNANDBIN) ? "EmuNAND.bin" :"NAND.bin"))
+            return 1;
+        if (nand_size != FileGetSize()) {
+            FileClose();
+            Debug("NAND dump has the wrong size!");
+            return 1;
+        };
+        if(!DebugFileRead(magic, 4, 0x100)) {
+            FileClose();
+            return 1;
+        }
+        if (memcmp(magic, "NCSD", 4) != 0) {
+            FileClose();
+            Debug("Not a proper NAND dump!");
+            return 1;
+        }
         Debug("Injecting file to %sNAND (%uMB)...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
         for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
             u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
@@ -222,6 +221,7 @@ u32 FormatSdCard(u32 param)
         }
         FileClose();
         Debug("starter.bin is stored in memory");
+        Debug("");
     } else if (starter_size) {
         Debug("File starter.bin was not found!");
         Debug("You may continue without autosetup");
