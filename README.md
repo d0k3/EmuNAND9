@@ -33,7 +33,7 @@ As written above, this includes a number of safety measures to make it as idiot 
 ## Starter pack contents
 As a new feature, EmuNAND9Tool contains the ability to transfer a starter pack to your newly formatted SD card. The starter pack is in the file called 'starter.bin'. This file can be either a boot.3dsx or a Launcher.dat, but you have to rename it to 'starter.bin' for it work. EmuNAND9Tool will detect the type of 'starter.bin' automatically and name it accordingly when transfering to the formatted SD card. The maximum size of 'starter.bin' is 16MB.
 
-The 'starter.bin' included with EmuNAND9Tool is an extended version of smealums homebrew starter pack (from https://smealum.github.io/ninjhax2/). It was converted to a 3DS compatible self extracting ZIP archive using ZIP3DSFX (https://github.com/d0k3/ZIP3DSFX). ZIP3DSFX doesn't have a graphical user interface at the moment, but you can just rename the included starter.bin to starter.zip and edit it in a standard ZIP archiver.
+The 'starter.bin' included with EmuNAND9Tool is an extended version of smealums homebrew starter pack (from https://smealum.github.io/ninjhax2/). It was converted to a 3DS compatible self extracting ZIP archive using ZIP3DSFX (https://github.com/d0k3/ZIP3DSFX). ZIP3DSFX doesn't have a graphical user interface at the moment, but you can use the simple batch script included in the release archive to convert any ZIP archive to your personal .3DSX self extracting ZIP archive. You can also open the starter.bin in any ZIP archiver.
 
 The starter.bin contains the following homebrew software:
 * Gridlauncher by mashers (instead of regular HB launcher)
