@@ -148,15 +148,18 @@ release:
 	@rm -fr $(BUILD) $(OUTPUT).bin $(OUTPUT).elf $(CURDIR)/$(LOADER)/data
 	@-make --no-print-directory brahma
 	@[ -d $(RELEASE) ] || mkdir -p $(RELEASE)
-	@[ -d $(RELEASE)/$(TARGET) ] || mkdir -p $(RELEASE)/$(TARGET)
-	@[ -d $(RELEASE)/scripts ] || mkdir -p $(RELEASE)/scripts
+	@[ -d $(RELEASE)/3DS ] || mkdir -p $(RELEASE)/3DS
+	@[ -d $(RELEASE)/3DS/$(TARGET) ] || mkdir -p $(RELEASE)/3DS/$(TARGET)
+	@[ -d $(RELEASE)/EmuNAND9 ] || mkdir -p $(RELEASE)/EmuNAND9
+	@[ -d $(RELEASE)/starterGen ] || mkdir -p $(RELEASE)/starterGen
 	@cp $(OUTPUT_D)/Launcher.dat $(RELEASE)
 	@-cp $(OUTPUT).bin $(RELEASE)
 	@-cp $(OUTPUT).dat $(RELEASE)
 	@-cp $(OUTPUT).nds $(RELEASE)
-	@-cp $(OUTPUT).3dsx $(RELEASE)/$(TARGET)
-	@-cp $(OUTPUT).smdh $(RELEASE)/$(TARGET)
-	@cp $(CURDIR)/scripts/*.py $(RELEASE)/scripts
+	@-cp $(OUTPUT).3dsx $(RELEASE)/3DS/$(TARGET)
+	@-cp $(OUTPUT).smdh $(RELEASE)/3DS/$(TARGET)
+	@-cp resources/starter.bin $(RELEASE)/EmuNAND9
+	@-cp resources/starterGen/*.* $(RELEASE)/starterGen
 	@-7z a $(RELEASE)/$(TARGET)-d0k3-`date +'%Y%m%d-%H%M%S'`.zip $(RELEASE)/*
 	
 #---------------------------------------------------------------------------------
