@@ -69,6 +69,7 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 export OUTPUT_D	:=	$(CURDIR)/output
 export OUTPUT	:=	$(OUTPUT_D)/$(TARGET)
 export RELEASE	:=	$(CURDIR)/release
+export STARTER	:=	$(CURDIR)/starter
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
 			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
@@ -145,30 +146,34 @@ release:
 	@rm -fr $(BUILD) $(OUTPUT_D) $(RELEASE)
 	@make --no-print-directory gateway
 	@-make --no-print-directory cakerop
-	@rm -fr $(BUILD) $(OUTPUT).bin $(OUTPUT).elf $(CURDIR)/$(LOADER)/data
+	@rm -fr $(BUILD) $(OUTPUT).bin $(OUTPUT).elf
 	@-make --no-print-directory brahma
 	@[ -d $(RELEASE) ] || mkdir -p $(RELEASE)
 	@[ -d $(RELEASE)/3DS ] || mkdir -p $(RELEASE)/3DS
 	@[ -d $(RELEASE)/3DS/$(TARGET) ] || mkdir -p $(RELEASE)/3DS/$(TARGET)
 	@[ -d $(RELEASE)/EmuNAND9 ] || mkdir -p $(RELEASE)/EmuNAND9
-	@[ -d $(RELEASE)/starterGen ] || mkdir -p $(RELEASE)/starterGen
 	@cp $(OUTPUT_D)/Launcher.dat $(RELEASE)
 	@-cp $(OUTPUT).bin $(RELEASE)
 	@-cp $(OUTPUT).dat $(RELEASE)
 	@-cp $(OUTPUT).nds $(RELEASE)
 	@-cp $(OUTPUT).3dsx $(RELEASE)/3DS/$(TARGET)
 	@-cp $(OUTPUT).smdh $(RELEASE)/3DS/$(TARGET)
-	@-cp resources/starter.bin $(RELEASE)/EmuNAND9
-	@-cp resources/starterGen/*.* $(RELEASE)/starterGen
 	@-cp Readme.md $(RELEASE)
+	@[ -d $(RELEASE)/starterGen ] || mkdir -p $(RELEASE)/starterGen
+	@-cp $(OUTPUT).bin $(CURDIR)/starter/extstarterpack/arm9payloads
+	@-make --no-print-directory -C $(STARTER) -f $(STARTER)/Makefile
+	@-cp $(STARTER)/output/starter.bin $(RELEASE)/EmuNAND9
+	@-cp $(STARTER)/output/drop_zip_here.bat $(RELEASE)/starterGen
+	@-cp $(STARTER)/output/ZIP3DSFX.3dsx $(RELEASE)/starterGen
 	@-7z a $(RELEASE)/$(TARGET)-d0k3-`date +'%Y%m%d-%H%M%S'`.zip $(RELEASE)/*
-	
+
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
 	@-make clean --no-print-directory -C CakeHax
 	@-make clean --no-print-directory -C CakesROP
 	@-make clean --no-print-directory -C BrahmaLoader
+	@-make clean --no-print-directory -C starter
 	@rm -fr $(BUILD) $(OUTPUT_D) $(RELEASE)
 
 

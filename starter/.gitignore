@@ -1,0 +1,6 @@
+/backup
+/build
+/output
+/release
+
+.DS_Store

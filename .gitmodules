@@ -16,3 +16,4 @@
 [submodule "starter/ZIP3DSFX"]
 	path = starter/ZIP3DSFX
 	url = https://github.com/d0k3/ZIP3DSFX
+	ignore = dirty
