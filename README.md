@@ -7,7 +7,7 @@ You can only use this if your 3DS FW is <= 9.2. There are multiple ways of runni
 * CakeHax - use EmuNAND9Tool.dat, EmuNAND9Tool.nds for MSET is included
 * Homebrew Launcher - use EmuNAND9Tool.3dsx to run this from Homebrew Launcher
 * Gateway 4.x browser exploit - use Launcher.dat
-* Bootstrap / Brahma - use Decrypt9.bin
+* Bootstrap / Brahma - use EmuNAND9Tool.bin
 
 ## What can this do?
 Actually, a lot! See this incomplete list:

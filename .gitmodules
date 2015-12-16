@@ -9,3 +9,10 @@
 	path = CakesROP
 	url = https://github.com/mid-kid/CakesROP
 	ignore = dirty
+[submodule "starter/extstarterpack"]
+	path = starter/extstarterpack
+	url = https://github.com/d0k3/3DS-Extended-Homebrew-Starter-Pack
+	ignore = dirty
+[submodule "starter/ZIP3DSFX"]
+	path = starter/ZIP3DSFX
+	url = https://github.com/d0k3/ZIP3DSFX
