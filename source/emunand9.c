@@ -320,8 +320,27 @@ u32 FormatSdCard(u32 param)
     DeinitFS();
     InitFS();
     
+    // try creating the working directory
+    #ifdef WORK_DIR
+    DirMake(WORK_DIR);
+    DeinitFS();
+    InitFS();
+    #endif
+    
+    // setup starter.bin
     if (starter_size) {
         bool is_3dsx = (memcmp(buffer, "3DSX", 4) == 0);
+        Debug("");
+        Debug("Writing starter.bin to SD card...");
+        if (!FileCreate("starter.bin", true)) {
+            Debug("Failed writing to the SD card!");
+            return 1;
+        }
+        if (!DebugFileWrite(buffer, starter_size, 0)) {
+            FileClose();
+            return 1;
+        }
+        FileClose();
         Debug("Writing %s to SD card...", (is_3dsx) ? "boot.3dsx" : "launcher.dat");
         if (!FileCreate((is_3dsx) ? "/boot.3dsx" : "/launcher.dat", true)) {
             Debug("Failed writing to the SD card!");
@@ -342,5 +361,6 @@ u32 CompleteSetupEmuNand(u32 param)
 {
     u32 res = FormatSdCard(SD_SETUP_EMUNAND | SD_USE_STARTER);
     if (res != 0) return res;
+    Debug("");
     return InjectNand(N_EMUNAND | N_DIRECTCOPY | N_NOCONFIRM);
 }
