@@ -95,7 +95,7 @@ u32 DumpNand(u32 param)
     bool use_emunand = (param & N_EMUNAND);
     u32 result = 0;
 
-    if (CheckEmuNand() <= RES_EMUNAND_READY) {
+    if (use_emunand && (CheckEmuNand() <= RES_EMUNAND_READY)) {
         Debug("EmuNAND not found on SD card");
         return 1;
     }
