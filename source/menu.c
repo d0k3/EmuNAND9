@@ -64,7 +64,7 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
     if (!top_screen) {
         DrawStringF(10, 10, true, "Selected: %-*.*s", 32, 32, currMenu->entries[index].name);
     } else {
-        DrawStringF(32, 30, false, "*** EmuNAND9Tool ***\n \nTo setup a fresh SD with EmuNAND,\nchoose 'Complete EmuNAND Setup'.\nYou will be asked to switch your\nSD card during the process.\nCheck the other menu entries for\nmore options.\n \nCredits:\n* Archshift (for Decrypt9)\n* patois (for Brahma)\n* mid-kid (for CakeHax)\n* Datalogger (for testing)\n* Shadowtrance (for testing)\n* everyone else who helped me!");
+        DrawStringF(32, 30, false, "*** EmuNAND9 ***\n \nTo setup a fresh SD with EmuNAND,\nchoose 'Complete EmuNAND Setup'.\nYou will be asked to switch your\nSD card during the process.\nCheck the other menu entries for\nmore options.\n \nCredits:\n* Archshift (for Decrypt9)\n* patois (for Brahma)\n* mid-kid (for CakeHax)\n* Datalogger (for testing)\n* Shadowtrance (for testing)\n* everyone else who helped me!");
     }
         
     for (u32 i = 0; i < currMenu->n_entries; i++) { // draw menu entries / selection []
