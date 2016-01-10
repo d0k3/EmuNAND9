@@ -7,6 +7,7 @@
 #define GFX_PROGRESS  "progress.bin"
 #define GFX_DONE      "done.bin"
 #define GFX_FAILED    "failed.bin"
+#define GFX_CANCEL    "cancel.bin"
 #define GFX_UNMOUNT   "unmount.bin"
 #define GFX_DANGER_E  "danger_e.bin"
 #define GFX_DANGER_S  "danger_s.bin"

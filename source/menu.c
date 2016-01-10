@@ -89,7 +89,7 @@ u32 ProcessEntry(MenuEntry* entry)
     Debug("");
     Debug("Press B to return, START to reboot.");
     #ifdef USE_THEME
-    LoadThemeGfx((res == 0) ? GFX_DONE : GFX_FAILED, false);
+    LoadThemeGfx((res == 0) ? GFX_DONE : (res == 1) ? GFX_FAILED : GFX_CANCEL, false);
     #endif
     while(!(pad_state = InputWait() & (BUTTON_B | BUTTON_START)));
     
@@ -116,7 +116,6 @@ void BatchScreenshot(MenuInfo* info, bool full_batch)
 
 u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
 {
-    MenuInfo mainMenu;
     MenuInfo* currMenu;
     MenuInfo* prevMenu[MENU_MAX_DEPTH];
     u32 prevIndex[MENU_MAX_DEPTH];
@@ -126,6 +125,7 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
     u32 result = MENU_EXIT_REBOOT;
     
     #ifndef USE_THEME
+    MenuInfo mainMenu;
     if (n_entries_main > 1) {
         // build main menu structure from submenus
         if (n_entries_main > MENU_MAX_ENTRIES) // limit number of entries
