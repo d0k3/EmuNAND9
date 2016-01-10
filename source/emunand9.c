@@ -6,6 +6,7 @@
 
 #define BUFFER_ADDRESS  ((u8*) 0x21000000)
 #define BUFFER_MAX_SIZE (8 * 1024 * 1024)
+#define FCRAM_END       ((u8*) 0x28000000)
 
 #define NAND_SECTOR_SIZE 0x200
 #define SECTORS_PER_READ (BUFFER_MAX_SIZE / NAND_SECTOR_SIZE)
@@ -210,10 +211,22 @@ u32 FormatSdCard(u32 param)
     if (starter_size && FileOpen("starter.bin")) {
         Debug("Copying starter.bin to memory...");
         starter_size = FileGetSize();
-        if (starter_size > MAX_STARTER_SIZE) {
-            Debug("File is %ikB (max %ikB)", starter_size / 1024, MAX_STARTER_SIZE / 1024);
+        if (starter_size > (FCRAM_END - buffer)) {
+            Debug("File is %ikB, exceeds RAM size", starter_size / 1024);
             FileClose();
             return 1;
+        } else if (starter_size > MAX_STARTER_SIZE) {
+            Debug("File is %ikB (recom. max: %ikB)", starter_size / 1024, MAX_STARTER_SIZE / 1024);
+            Debug("This could be too big. Still continue?");
+            while (true) {
+                u32 pad_state = InputWait();
+                if (pad_state & BUTTON_A) break;
+                else if (pad_state & BUTTON_B) {
+                    FileClose();
+                    return 2;
+                }
+            }
+            Debug("");
         }
         if (!DebugFileRead(buffer, starter_size, 0)) {
             FileClose();
