@@ -243,8 +243,10 @@ u32 FormatSdCard(u32 param)
     Debug("If you wish to proceed, enter:");
     Debug(unlockText);
     Debug("(B to cancel)");
-    if (CheckSequence(unlockSequence, sizeof(unlockSequence) / sizeof(u32)) != 0)
+    if (CheckSequence(unlockSequence, sizeof(unlockSequence) / sizeof(u32)) != 0) {
+        InitFS();
         return 2;
+    }
     Debug("");
     InitFS();
     
@@ -278,7 +280,6 @@ u32 FormatSdCard(u32 param)
         if (pad_state & BUTTON_A) break;
         else if (pad_state & BUTTON_B) return 2;
     }
-    InitFS();
     Debug("");
    
     // set FAT partition offset and size
@@ -330,7 +331,6 @@ u32 FormatSdCard(u32 param)
     // setup starter.bin
     if (starter_size) {
         bool is_3dsx = (memcmp(buffer, "3DSX", 4) == 0);
-        Debug("");
         Debug("Writing starter.bin to SD card...");
         if (!FileCreate("starter.bin", true)) {
             Debug("Failed writing to the SD card!");
