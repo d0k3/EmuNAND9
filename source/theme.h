@@ -13,6 +13,12 @@
 #define GFX_DEBUG_BG  "debug_bg.bin"
 #define GFX_LOGO      "logo.bin"
 
+#define COLOR_RED           RGB(0xFF, 0x00, 0x00)
+#define COLOR_GREEN         RGB(0x00, 0xFF, 0x00)
+#define COLOR_BLUE          RGB(0xFF, 0x00, 0xFF)
+#define COLOR_GREY          RGB(0x77, 0x77, 0x77)
+#define COLOR_PURPLE        RGB(0x66, 0x00, 0xFF)
+
 #define LOGO_TOP        true
 #define LOGO_TEXT_X     10
 #define LOGO_TEXT_Y     SCREEN_HEIGHT - 10
