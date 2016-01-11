@@ -199,6 +199,7 @@ u32 FormatSdCard(u32 param)
     u8* buffer = (u8*) 0x21000000;
     
     bool setup_emunand = (param & SD_SETUP_EMUNAND);
+    bool setup_legacy = (param & SD_SETUP_LEGACY);
     u32 starter_size = (param & SD_USE_STARTER) ? 1 : 0;
     
     u32 nand_size_sectors  = getMMCDevice(0)->total_size;
@@ -297,22 +298,23 @@ u32 FormatSdCard(u32 param)
    
     // set FAT partition offset and size
     if (setup_emunand) {
-        if (nand_size_sectors + SD_MINFREE_SECTORS + 1 > sd_size_sectors) {
+        sd_emunand_sectors = (setup_legacy) ? align(nand_size_sectors + 1, 0x200000) - 1 : nand_size_sectors;
+        if (sd_emunand_sectors + SD_MINFREE_SECTORS + 1 > sd_size_sectors) {
             Debug("SD is too small for EmuNAND!");
             return 1;
         }
-        sd_emunand_sectors = nand_size_sectors;
     }
     fat_offset_sectors = align(sd_emunand_sectors + 1, PARTITION_ALIGN);
     fat_size_sectors = sd_size_sectors - fat_offset_sectors;
     
     // make a new MBR
     memset(mbr_info, 0x00, 0x200);
-    sprintf(mbr_info->text, "%-*.*s%-16.16s%-8.8s%08X%-8.8s%08X%-8.8s%08X%-8.8s%08X",
+    snprintf(mbr_info->text, 445, "%-*.*s%-16.16s%-8.8s%08X%-8.8s%08X%-8.8s%08X%-8.8s%08X%-8.8s%08X",
         setup_emunand ? 16 : 0, setup_emunand ? 16 : 0,
         setup_emunand ? "GATEWAYNAND" : "", "EMUNAND9SD",
         "SDCSIZE:", (unsigned int) sd_size_sectors,
-        "NNDSIZE:", (unsigned int) nand_size_sectors,
+        "SYSSIZE:", (unsigned int) nand_size_sectors,
+        "EMUSIZE:", (unsigned int) sd_emunand_sectors,
         "FATSIZE:", (unsigned int) fat_size_sectors,
         "FATOFFS:", (unsigned int) fat_offset_sectors);
     mbr_info->magic         = 0xAA55;

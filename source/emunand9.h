@@ -8,7 +8,8 @@
 #define RES_EMUNAND_REDNAND    3
 
 #define SD_SETUP_EMUNAND (1<<0)
-#define SD_USE_STARTER   (1<<1)
+#define SD_SETUP_LEGACY  (1<<1)
+#define SD_USE_STARTER   (1<<2)
 
 #define N_EMUNAND        (1<<0)
 #define N_EMUNANDBIN     (1<<1)

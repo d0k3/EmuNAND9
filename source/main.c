@@ -23,12 +23,10 @@ MenuInfo menu[] =
         }
     },
     {
-        "SD Format Options", 4,
+        "SD Format Options", 2,
         {
-            { "Format SD (EmuNAND)",          &FormatSdCard,          SD_SETUP_EMUNAND },
-            { "Format SD (EmuNAND/auto)",     &FormatSdCard,          SD_SETUP_EMUNAND | SD_USE_STARTER },
-            { "Format SD (standard)",         &FormatSdCard,          0 },
-            { "Format SD (standard/auto)",    &FormatSdCard,          SD_USE_STARTER }
+            { "Format SD...",                 NULL,                   SUBMENU_START + 2 },
+            { "Format SD & setup starter...", NULL,                   SUBMENU_START + 3 }
         }
     },
     {
@@ -39,6 +37,22 @@ MenuInfo menu[] =
             { "Clone EmuNAND.bin to EmuNAND", &InjectNand,            N_EMUNAND | N_EMUNANDBIN },
             { "Dump SysNAND to NAND.bin",     &DumpNand,              0 },
             { "Dump EmuNAND to EmuNAND.bin",  &DumpNand,              N_EMUNAND }
+        }
+    },
+    {
+        "Format SD...", 3,
+        {
+            { "... without EmuNAND",          &FormatSdCard,          0 },
+            { "... for EmuNAND (default)",    &FormatSdCard,          SD_SETUP_EMUNAND },
+            { "... for EmuNAND (legacy)",     &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
+        }
+    },
+    {
+        "Format SD & setup starter...", 3,
+        {
+            { "... without EmuNAND",          &FormatSdCard,          SD_USE_STARTER },
+            { "... for EmuNAND (default)",    &FormatSdCard,          SD_USE_STARTER | SD_SETUP_EMUNAND },
+            { "... for EmuNAND (legacy)",     &FormatSdCard,          SD_USE_STARTER | SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
         }
     },
     {
