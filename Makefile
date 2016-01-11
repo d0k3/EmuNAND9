@@ -23,8 +23,9 @@ DATA		:=	data
 INCLUDES	:=	include source source/fatfs
 
 #---------------------------------------------------------------------------------
-# Setup some defines
+# THEME: if set to anything, name of the themes file folder inside resources
 #---------------------------------------------------------------------------------
+THEME	:=	
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -39,6 +40,10 @@ CFLAGS	:=	-g -Wall -O2\
 CFLAGS	+=	$(INCLUDE) -DEXEC_$(EXEC_METHOD) -DARM9
 
 CFLAGS	+=	-DBUILD_NAME="\"$(TARGET) (`date +'%Y/%m/%d'`)\""
+
+ifneq ($(strip $(THEME)),)
+CFLAGS	+=	-DUSE_THEME=\"/$(THEME)\"
+endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
@@ -160,7 +165,11 @@ release:
 	@-cp $(OUTPUT).smdh $(RELEASE)/3DS/$(TARGET)
 	@-cp Readme.md $(RELEASE)
 	@[ -d $(RELEASE)/starterGen ] || mkdir -p $(RELEASE)/starterGen
-	@-cp $(OUTPUT).bin $(CURDIR)/starter/extstarterpack/arm9payloads
+	@-cp $(OUTPUT).bin $(STARTER)/extstarterpack/arm9payloads
+	@-[ ! -n "$(strip $(THEME))" ] || mkdir $(RELEASE)/$(THEME)
+	@-[ ! -n "$(strip $(THEME))" ] || cp $(CURDIR)/resources/$(THEME)/*.bin $(RELEASE)/$(THEME)
+	@-[ ! -n "$(strip $(THEME))" ] || ([ -d $(STARTER)/extstarterpack/$(THEME) ] || mkdir $(STARTER)/extstarterpack/$(THEME))
+	@-[ ! -n "$(strip $(THEME))" ] || cp $(CURDIR)/resources/$(THEME)/*.bin $(STARTER)/extstarterpack/$(THEME)
 	@-make --no-print-directory -C $(STARTER) -f $(STARTER)/Makefile
 	@-cp $(STARTER)/output/starter.bin $(RELEASE)/EmuNAND9
 	@-cp $(STARTER)/output/drop_zip_here.bat $(RELEASE)/starterGen
