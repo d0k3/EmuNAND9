@@ -42,7 +42,7 @@ CFLAGS	+=	$(INCLUDE) -DEXEC_$(EXEC_METHOD) -DARM9
 CFLAGS	+=	-DBUILD_NAME="\"$(TARGET) (`date +'%Y/%m/%d'`)\""
 
 ifneq ($(strip $(THEME)),)
-CFLAGS	+=	-DUSE_THEME=\"/$(THEME)\"
+CFLAGS	+=	-DUSE_THEME=\"\/$(THEME)\"
 endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
@@ -165,16 +165,15 @@ release:
 	@-cp $(OUTPUT).smdh $(RELEASE)/3DS/$(TARGET)
 	@-cp Readme.md $(RELEASE)
 	@[ -d $(RELEASE)/starterGen ] || mkdir -p $(RELEASE)/starterGen
-	@-cp $(OUTPUT).bin $(STARTER)/extstarterpack/arm9payloads
-	@-[ ! -n "$(strip $(THEME))" ] || mkdir $(RELEASE)/$(THEME)
-	@-[ ! -n "$(strip $(THEME))" ] || cp $(CURDIR)/resources/$(THEME)/*.bin $(RELEASE)/$(THEME)
-	@-[ ! -n "$(strip $(THEME))" ] || ([ -d $(STARTER)/extstarterpack/$(THEME) ] || mkdir $(STARTER)/extstarterpack/$(THEME))
-	@-[ ! -n "$(strip $(THEME))" ] || cp $(CURDIR)/resources/$(THEME)/*.bin $(STARTER)/extstarterpack/$(THEME)
+	@-[ "$(TARGET)" != "EmuNAND9" ] || cp $(OUTPUT).bin $(STARTER)/extstarterpack/arm9payloads
+	@-[ "$(TARGET)" == "EmuNAND9" ] || ([ -d $(STARTER)/extstarterpack/3DS/$(TARGET) ] || mkdir $(STARTER)/extstarterpack/3DS/$(TARGET)) && cp $(RELEASE)/3DS/$(TARGET)/*.* $(STARTER)/extstarterpack/3DS/$(TARGET)
+	@-[ ! -n "$(strip $(THEME))" ] || (mkdir $(RELEASE)/$(THEME) && cp $(CURDIR)/resources/$(THEME)/*.bin $(RELEASE)/$(THEME))
+	@-[ ! -n "$(strip $(THEME))" ] || (([ -d $(STARTER)/extstarterpack/$(THEME) ] || mkdir $(STARTER)/extstarterpack/$(THEME)) && cp $(CURDIR)/resources/$(THEME)/*.bin $(STARTER)/extstarterpack/$(THEME))
 	@-make --no-print-directory -C $(STARTER) -f $(STARTER)/Makefile
 	@-cp $(STARTER)/output/starter.bin $(RELEASE)/EmuNAND9
 	@-cp $(STARTER)/output/drop_zip_here.bat $(RELEASE)/starterGen
 	@-cp $(STARTER)/output/ZIP3DSFX.3dsx $(RELEASE)/starterGen
-	@-7z a $(RELEASE)/$(TARGET)-d0k3-`date +'%Y%m%d-%H%M%S'`.zip $(RELEASE)/*
+	@-7z a $(RELEASE)/$(TARGET)-`date +'%Y%m%d-%H%M%S'`.zip $(RELEASE)/*
 
 #---------------------------------------------------------------------------------
 clean:
