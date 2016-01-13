@@ -182,7 +182,7 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
             index = (index == 0) ? currMenu->n_entries - 1 : index - 1;
             full_draw = false;
         } else if ((pad_state & BUTTON_R1) && (menuLvl == 1)) {
-            if (++currMenu - info >= n_entries_main) currMenu = info;
+            if (++currMenu - info >= (ssize_t)n_entries_main) currMenu = info;
             index = 0;
         } else if ((pad_state & BUTTON_L1) && (menuLvl == 1)) {
             if (--currMenu < info) currMenu = info + n_entries_main - 1;

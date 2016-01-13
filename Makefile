@@ -32,7 +32,7 @@ THEME	:=
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O2\
+CFLAGS	:=	-g -Wall -O2 -Wextra\
 			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 			-ffast-math -std=c99\
 			$(ARCH)

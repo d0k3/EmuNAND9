@@ -78,13 +78,13 @@ void DrawCharacter(u8* screen, int character, int x, int y, int color, int bgcol
 
 void DrawString(u8* screen, const char *str, int x, int y, int color, int bgcolor)
 {
-    for (int i = 0; i < strlen(str); i++)
+    for (size_t i = 0; i < strlen(str); i++)
         DrawCharacter(screen, str[i], x + i * 8, y, color, bgcolor);
 }
 
 void DrawStringF(int x, int y, bool use_top, const char *format, ...)
 {
-    char str[512] = {}; // 512 should be more than enough
+    char str[512] = { 0 }; // 512 should be more than enough
     va_list va;
 
     va_start(va, format);
