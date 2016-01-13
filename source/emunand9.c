@@ -5,10 +5,10 @@
 #include "fatfs/sdmmc.h"
 
 #define BUFFER_ADDRESS  ((u8*) 0x21000000)
-#define BUFFER_MAX_SIZE (8 * 1024 * 1024)
+#define BUFFER_MAX_SIZE ((u32)(8 * 1024 * 1024))
 #define FCRAM_END       ((u8*) 0x28000000)
 
-#define NAND_SECTOR_SIZE 0x200
+#define NAND_SECTOR_SIZE ((u32)0x200)
 #define SECTORS_PER_READ (BUFFER_MAX_SIZE / NAND_SECTOR_SIZE)
 
 #define SD_MINFREE_SECTORS  ((1024 * 1024 * 1024) / 0x200)  // have at least 1GB free
@@ -212,7 +212,7 @@ u32 FormatSdCard(u32 param)
     if (starter_size && FileOpen("starter.bin")) {
         Debug("Copying starter.bin to memory...");
         starter_size = FileGetSize();
-        if (starter_size > (FCRAM_END - buffer)) {
+        if (starter_size > ((u32)(FCRAM_END - buffer))) {
             Debug("File is %ikB, exceeds RAM size", starter_size / 1024);
             FileClose();
             return 1;
@@ -374,6 +374,7 @@ u32 FormatSdCard(u32 param)
 
 u32 CompleteSetupEmuNand(u32 param)
 {
+    (void)param; // Unused
     u32 res = FormatSdCard(SD_SETUP_EMUNAND | SD_USE_STARTER);
     if (res != 0) return res;
     Debug("");

@@ -44,14 +44,14 @@
 
 inline char* strupper(const char* str) {
     char* buffer = (char*)malloc(strlen(str) + 1);
-    for (int i = 0; i < strlen(str); ++i)
+    for (size_t i = 0; i < strlen(str); ++i)
         buffer[i] = toupper((unsigned)str[i]);
     return buffer;
 }
 
 inline char* strlower(const char* str) {
     char* buffer = (char*)malloc(strlen(str) + 1);
-    for (int i = 0; i < strlen(str); ++i)
+    for (size_t i = 0; i < strlen(str); ++i)
         buffer[i] = tolower((unsigned)str[i]);
     return buffer;
 }
