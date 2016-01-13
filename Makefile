@@ -166,7 +166,7 @@ release:
 	@-cp Readme.md $(RELEASE)
 	@[ -d $(RELEASE)/starterGen ] || mkdir -p $(RELEASE)/starterGen
 	@-[ "$(TARGET)" != "EmuNAND9" ] || cp $(OUTPUT).bin $(STARTER)/extstarterpack/arm9payloads
-	@-[ "$(TARGET)" == "EmuNAND9" ] || ([ -d $(STARTER)/extstarterpack/3DS/$(TARGET) ] || mkdir $(STARTER)/extstarterpack/3DS/$(TARGET)) && cp $(RELEASE)/3DS/$(TARGET)/*.* $(STARTER)/extstarterpack/3DS/$(TARGET)
+	@-[ "$(TARGET)" = "EmuNAND9" ] || (([ -d $(STARTER)/extstarterpack/3DS/$(TARGET) ] || mkdir $(STARTER)/extstarterpack/3DS/$(TARGET)) && cp $(RELEASE)/3DS/$(TARGET)/*.* $(STARTER)/extstarterpack/3DS/$(TARGET))
 	@-[ ! -n "$(strip $(THEME))" ] || (mkdir $(RELEASE)/$(THEME) && cp $(CURDIR)/resources/$(THEME)/*.bin $(RELEASE)/$(THEME))
 	@-[ ! -n "$(strip $(THEME))" ] || (([ -d $(STARTER)/extstarterpack/$(THEME) ] || mkdir $(STARTER)/extstarterpack/$(THEME)) && cp $(CURDIR)/resources/$(THEME)/*.bin $(STARTER)/extstarterpack/$(THEME))
 	@-make --no-print-directory -C $(STARTER) -f $(STARTER)/Makefile
