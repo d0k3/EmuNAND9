@@ -127,6 +127,7 @@ u32 InjectNand(u32 param)
 {
     u8* buffer = BUFFER_ADDRESS;
     u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
+    u32 nand_size_min = (nand_size >= 0x4D800000) ? 0x4D800000 : 0x3AF00000;
     bool use_emunand = (param & N_EMUNAND); // we won't inject to SysNAND
     u32 result = 0;
     u8 magic[4];
@@ -159,13 +160,30 @@ u32 InjectNand(u32 param)
             WriteNandSectors(i, read_sectors, buffer, true);
         }
     } else {
+        u32 file_size;
         if (!DebugFileOpen((param & N_EMUNANDBIN) ? "EmuNAND.bin" :"NAND.bin"))
             return 1;
-        if (nand_size != FileGetSize()) {
+        file_size = FileGetSize();
+        if (file_size < nand_size_min) {
+            Debug("NAND dump misses data!");
             FileClose();
-            Debug("NAND dump has the wrong size!");
             return 1;
-        };
+        } else if (file_size != nand_size) {
+            Debug("NAND dump is %s than NAND memory chip.", (file_size < nand_size) ? "smaller" : "bigger");
+            Debug("This may happen with dumps from other tools.");
+            Debug("Are you sure this dump is valid?");
+            Debug("(A to proceed, B to cancel)");
+            while(true) {
+                u32 pad_state = InputWait();
+                if (pad_state & BUTTON_A) break;
+                else if (pad_state & BUTTON_B) {
+                    FileClose();
+                    return 2;
+                }
+            }
+            if (file_size < nand_size) // can only write as much sectors as there are
+                n_sectors = file_size / NAND_SECTOR_SIZE;
+        }
         if(!DebugFileRead(magic, 4, 0x100)) {
             FileClose();
             return 1;
