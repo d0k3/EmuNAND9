@@ -41,17 +41,3 @@
 // work files / directories
 #define WORK_DIR "/EmuNAND9"
 #define LOG_FILE "EmuNAND9.log"
-
-inline char* strupper(const char* str) {
-    char* buffer = (char*)malloc(strlen(str) + 1);
-    for (size_t i = 0; i < strlen(str); ++i)
-        buffer[i] = toupper((unsigned)str[i]);
-    return buffer;
-}
-
-inline char* strlower(const char* str) {
-    char* buffer = (char*)malloc(strlen(str) + 1);
-    for (size_t i = 0; i < strlen(str); ++i)
-        buffer[i] = tolower((unsigned)str[i]);
-    return buffer;
-}
