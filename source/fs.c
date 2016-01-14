@@ -3,6 +3,7 @@
 
 #include "fatfs/ff.h"
 
+static bool fs_ok = false;
 static FATFS fs;
 static FIL file;
 static DIR dir;
@@ -22,7 +23,7 @@ bool InitFS()
     *(u32*)0x10000020 = 0;
     *(u32*)0x10000020 = 0x340;
     #endif
-    bool ret = (f_mount(&fs, "0:", 1) == FR_OK);
+    bool ret = fs_ok = (f_mount(&fs, "0:", 1) == FR_OK);
     #ifdef WORK_DIR
     if (ret)
         f_chdir(WORK_DIR);
@@ -33,11 +34,14 @@ bool InitFS()
 
 void DeinitFS()
 {
+    fs_ok = false;
     f_mount(NULL, "0:", 1);
 }
 
 bool FileOpen(const char* path)
 {
+    if (!fs_ok)
+        return false;
     unsigned flags = FA_READ | FA_WRITE | FA_OPEN_EXISTING;
     bool ret = (f_open(&file, path, flags) == FR_OK);
     f_lseek(&file, 0);
@@ -58,6 +62,8 @@ bool DebugFileOpen(const char* path)
 
 bool FileCreate(const char* path, bool truncate)
 {
+    if (!fs_ok)
+        return false;
     unsigned flags = FA_READ | FA_WRITE;
     flags |= truncate ? FA_CREATE_ALWAYS : FA_OPEN_ALWAYS;
     bool ret = (f_open(&file, path, flags) == FR_OK);
@@ -126,6 +132,8 @@ void FileClose()
 
 bool DirMake(const char* path)
 {
+    if (!fs_ok)
+        return false;
     FRESULT res = f_mkdir(path);
     bool ret = (res == FR_OK) || (res == FR_EXIST);
     return ret;
@@ -144,6 +152,8 @@ bool DebugDirMake(const char* path)
 
 bool DirOpen(const char* path)
 {
+    if (!fs_ok)
+        return false;
     return (f_opendir(&dir, path) == FR_OK);
 }
 
@@ -216,6 +226,8 @@ bool GetFileListWorker(char** list, int* lsize, char* fpath, int fsize, bool rec
 
 bool GetFileList(const char* path, char* list, int lsize, bool recursive)
 {
+    if (!fs_ok)
+        return false;
     char fpath[256];
     strncpy(fpath, path, 256);
     return GetFileListWorker(&list, &lsize, fpath, 256, recursive);
@@ -244,10 +256,12 @@ static uint64_t ClustersToBytes(FATFS* fs, DWORD clusters)
 
 uint64_t RemainingStorageSpace()
 {
+    if (!fs_ok)
+        return -1;
     DWORD free_clusters;
     FATFS *fs2;
     FRESULT res = f_getfree("0:", &free_clusters, &fs2);
-    if (res)
+    if (res != FR_OK)
         return -1;
 
     return ClustersToBytes(&fs, free_clusters);
@@ -255,5 +269,7 @@ uint64_t RemainingStorageSpace()
 
 uint64_t TotalStorageSpace()
 {
+    if (!fs_ok)
+        return -1;
     return ClustersToBytes(&fs, fs.n_fatent - 2);
 }
