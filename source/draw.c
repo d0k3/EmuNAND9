@@ -150,18 +150,16 @@ void DebugClear()
     #if defined USE_THEME && defined GFX_DEBUG_BG
     LoadThemeGfx(GFX_DEBUG_BG, true);
     #endif
-    LogWrite("");
 }
 
 void Debug(const char *format, ...)
 {
-    char tempstr[128] = { 0 }; // 128 instead of DBG_N_CHARS_X for log file 
+    char tempstr[DBG_N_CHARS_X] = { 0 };
     va_list va;
     
     va_start(va, format);
-    vsnprintf(tempstr, 128, format, va);
+    vsnprintf(tempstr, DBG_N_CHARS_X - 1, format, va);
     va_end(va);
-    LogWrite(tempstr);
     
     memmove(debugstr + DBG_N_CHARS_X, debugstr, DBG_N_CHARS_X * (DBG_N_CHARS_Y - 1));
     snprintf(debugstr, DBG_N_CHARS_X, "%-*.*s", DBG_N_CHARS_X - 1, DBG_N_CHARS_X - 1, tempstr);

@@ -24,7 +24,8 @@ bool InitFS()
     #endif
     bool ret = (f_mount(&fs, "0:", 1) == FR_OK);
     #ifdef WORK_DIR
-    f_chdir(WORK_DIR);
+    if (ret)
+        f_chdir(WORK_DIR);
     #endif
 
     return ret;
@@ -32,7 +33,6 @@ bool InitFS()
 
 void DeinitFS()
 {
-    LogWrite(NULL);
     f_mount(NULL, "0:", 1);
 }
 
@@ -230,39 +230,6 @@ bool PartitionFormat(const char* label)
         f_setlabel(label0);
     }
     return ret;
-}
-
-bool LogWrite(const char* text)
-{
-    #ifdef LOG_FILE
-    static FIL lfile;
-    static bool lready = false;
-    
-    if (text == NULL) {
-        f_sync(&lfile);
-        f_close(&lfile);
-        lready = false;
-        return true;
-    }
-    
-    if (!lready) {
-        unsigned flags = FA_READ | FA_WRITE | FA_OPEN_ALWAYS;
-        lready = (f_open(&lfile, LOG_FILE, flags) == FR_OK);
-        if (!lready) return false;
-        f_lseek(&lfile, f_size(&lfile));
-        f_sync(&lfile);
-    }
-    
-    const char newline = '\n';
-    UINT bytes_written;
-    UINT tlen = strnlen(text, 128); 
-    f_write(&lfile, text, tlen, &bytes_written);
-    if (bytes_written != tlen) return false;
-    f_write(&lfile, &newline, 1, &bytes_written);
-    if (bytes_written != 1) return false;
-    #endif
-    
-    return true;
 }
 
 static uint64_t ClustersToBytes(FATFS* fs, DWORD clusters)

@@ -40,4 +40,3 @@
     
 // work files / directories
 #define WORK_DIR "/EmuNAND9"
-#define LOG_FILE "EmuNAND9.log"
