@@ -4,6 +4,7 @@
 
 bool InitFS();
 void DeinitFS();
+bool CheckFS();
 
 /** Opens existing files */
 bool FileOpen(const char* path);

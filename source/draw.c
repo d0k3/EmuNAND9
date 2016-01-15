@@ -114,6 +114,9 @@ void Screenshot(const char* path)
     };
     static u32 n = 0;
     
+    if (!CheckFS()) // not mounted, nothing to do
+        return;
+    
     if (path == NULL) {
         for (; n < 1000; n++) {
             char filename[16];

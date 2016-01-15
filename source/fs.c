@@ -38,6 +38,11 @@ void DeinitFS()
     f_mount(NULL, "0:", 1);
 }
 
+bool CheckFS()
+{
+    return fs_ok;
+}
+
 bool FileOpen(const char* path)
 {
     if (!fs_ok)

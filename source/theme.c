@@ -38,8 +38,12 @@ void LoadThemeGfxLogo(void) {
     u32 emunand_state = CheckEmuNand();
     LoadThemeGfx(GFX_LOGO, LOGO_TOP);
     #if defined LOGO_TEXT_X && defined LOGO_TEXT_Y
-    DrawStringF(LOGO_TEXT_X, LOGO_TEXT_Y -  0, LOGO_TOP, "SD storage: %lluMB / %lluMB", RemainingStorageSpace() / (1024*1024), TotalStorageSpace() / (1024*1024));
-    DrawStringF(LOGO_TEXT_X, LOGO_TEXT_Y -  0, LOGO_TOP, "EmuNAND: %s",
+    if (CheckFS()) {
+        DrawStringF(LOGO_TEXT_X, LOGO_TEXT_Y -  0, LOGO_TOP, "SD storage: %lluMB / %lluMB", RemainingStorageSpace() / (1024*1024), TotalStorageSpace() / (1024*1024));
+    } else {
+        DrawStringF(LOGO_TEXT_X, LOGO_TEXT_Y -  0, LOGO_TOP, "SD storage: unknown filesystem");
+    }
+    DrawStringF(LOGO_TEXT_X, LOGO_TEXT_Y - 10, LOGO_TOP, "EmuNAND: %s",
         (emunand_state == RES_EMUNAND_READY) ? "SD is ready" :
         (emunand_state == RES_EMUNAND_GATEWAY) ? "GW EmuNAND" : 
         (emunand_state == RES_EMUNAND_GATEWAY) ? "RedNAND" : "SD not ready" );

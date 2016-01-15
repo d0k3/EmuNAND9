@@ -227,7 +227,12 @@ u32 FormatSdCard(u32 param)
     u32 fat_size_sectors   = 0;
     
     // copy starter.bin to memory for autosetup
-    if (starter_size && FileOpen("starter.bin")) {
+    if (starter_size && !CheckFS()) {
+        Debug("File system is corrupt or unknown");
+        Debug("Continuing without starter.bin...");
+        Debug("");
+        starter_size = 0;
+    } else if (starter_size && FileOpen("starter.bin")) {
         Debug("Copying starter.bin to memory...");
         starter_size = FileGetSize();
         if (starter_size > ((u32)(FCRAM_END - buffer))) {
@@ -237,6 +242,7 @@ u32 FormatSdCard(u32 param)
         } else if (starter_size > MAX_STARTER_SIZE) {
             Debug("File is %ikB (recom. max: %ikB)", starter_size / 1024, MAX_STARTER_SIZE / 1024);
             Debug("This could be too big. Still continue?");
+            Debug("(A to continue, B to cancel)");
             while (true) {
                 u32 pad_state = InputWait();
                 if (pad_state & BUTTON_A) break;
@@ -291,7 +297,11 @@ u32 FormatSdCard(u32 param)
     
     // this is the point of no return
     Debug("Total SD card size: %lluMB", ((u64) sd_size_sectors * 0x200) / (1024 * 1024));
-    Debug("Storage: %lluMB free / %lluMB total", RemainingStorageSpace() / (1024*1024), TotalStorageSpace() / (1024*1024));
+    if (CheckFS()) {
+        Debug("Storage: %lluMB free / %lluMB total", RemainingStorageSpace() / (1024*1024), TotalStorageSpace() / (1024*1024));
+    } else {
+        Debug("Unknown or corrupt file system");
+    }
     switch(CheckEmuNand()) {
         case RES_EMUNAND_READY:
             Debug("Already formatted for EmuNAND");
@@ -353,6 +363,14 @@ u32 FormatSdCard(u32 param)
         return 1;
     DeinitFS();
     InitFS();
+    
+    // check if it went well
+    if (!CheckFS()) {
+        Debug("Unknown error / something went wrong here");
+        Debug("Format this SD card from your PC first");
+        Debug("Then try this again");
+        return 1;
+    }
     
     // try creating the working directory
     #ifdef WORK_DIR
