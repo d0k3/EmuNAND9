@@ -12,9 +12,8 @@
 #define SD_USE_STARTER   (1<<2)
 
 #define N_EMUNAND        (1<<0)
-#define N_EMUNANDBIN     (1<<1)
-#define N_DIRECTCOPY     (1<<2)
-#define N_NOCONFIRM      (1<<3)
+#define N_DIRECTCOPY     (1<<1)
+#define N_NOCONFIRM      (1<<2)
 
 typedef struct {
     u8  status;         // 0x80

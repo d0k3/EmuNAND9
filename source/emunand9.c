@@ -89,8 +89,155 @@ static inline int WriteNandSectors(u32 sector_no, u32 numsectors, u8 *in, bool u
     // SysNAND write stubbed - not needed here, no need to take the risk
 }
 
+static inline u32 OutputFileNameSelector(char* filename, const char* basename, char* extension, bool emuname) {
+    char bases[3][64] = { 0 };
+    char* dotpos = NULL;
+    
+    // build first base name and extension
+    strncpy(bases[0], basename, 63);
+    dotpos = strrchr(bases[0], '.');
+    
+    if (dotpos) {
+        *dotpos = '\0';
+        if (!extension)
+            extension = dotpos + 1;
+    }
+    
+    // build other two base names
+    snprintf(bases[1], 63, "%s_%s", bases[0], (emuname) ? "emu" : "sys");
+    snprintf(bases[2], 63, "%s%s" , (emuname) ? "emu" : "sys", bases[0]);
+    
+    u32 fn_id = 0;
+    u32 fn_num = 0;
+    bool exists = false;
+    char extstr[16] = { 0 };
+    if (extension)
+        snprintf(extstr, 15, ".%s", extension);
+    Debug("Use arrow keys and <A> to choose a name");
+    while (true) {
+        char numstr[2] = { 0 };
+        // build and output file name (plus "(!)" if existing)
+        numstr[0] = (fn_num > 0) ? '0' + fn_num : '\0';
+        snprintf(filename, 63, "%s%s%s", bases[fn_id], numstr, extstr);
+        if ((exists = FileOpen(filename)))
+            FileClose();
+        Debug("\r%s%s", filename, (exists) ? " (!)" : "");
+        // user input routine
+        u32 pad_state = InputWait();
+        if (pad_state & BUTTON_DOWN) { // increment filename id
+            fn_id = (fn_id + 1) % 3;
+            fn_num = 0;
+        } else if (pad_state & BUTTON_UP) { // decrement filename id
+            fn_id = (fn_id > 0) ? fn_id - 1 : 2;
+        } else if ((pad_state & BUTTON_RIGHT) && (fn_num < 9)) { // increment number
+            fn_num++;
+        } else if ((pad_state & BUTTON_LEFT) && (fn_num > 0)) { // decrement number
+            fn_num--;
+        } else if (pad_state & BUTTON_A) {
+            Debug("%s%s", filename, (exists) ? " (!)" : "");
+            break;
+        } else if (pad_state & BUTTON_B) {
+            Debug("(cancelled by user)");
+            return 2;
+        }
+    }
+    
+    // overwrite confirmation
+    if (exists) {
+        Debug("Press <A> to overwrite existing file");
+        while (true) {
+            u32 pad_state = InputWait();
+            if (pad_state & BUTTON_A) {
+                break;
+            } else if (pad_state & BUTTON_B) {
+                Debug("(cancelled by user)");
+                return 2;
+            }
+        }
+    }
+    
+    return 0;
+}
+
+static inline u32 InputFileNameSelector(char* filename, const char* basename, char* extension, u32 fsize) {
+    char** fnptr = (char**) 0x20400000; // allow using 0x8000 byte
+    char* fnlist = (char*) 0x20408000; // allow using 0x80000 byte
+    u32 n_names = 0;
+    
+    // get the file list - try work directory first
+    if (!GetFileList(WORK_DIR, fnlist, 0x80000, false) && !GetFileList("/", fnlist, 0x800000, false)) {
+        Debug("Failed retrieving the file names list");
+        return 1;
+    }
+    
+    // get base name, extension
+    char base[64] = { 0 };
+    if (basename != NULL) {
+        // build base name and extension
+        strncpy(base, basename, 63);
+        char* dotpos = strrchr(base, '.');
+        if (dotpos) {
+            *dotpos = '\0';
+            if (!extension)
+                extension = dotpos + 1;
+        }
+    }
+    
+    // parse the file names list for usable entries
+    for (char* fn = strtok(fnlist, "\n"); fn != NULL; fn = strtok(NULL, "\n")) {
+        char* dotpos = strrchr(fn, '.');
+        if (strrchr(fn, '/'))
+            fn = strrchr(fn, '/') + 1;
+        if (strnlen(fn, 128) > 63)
+            continue; // file name too long
+        if ((basename != NULL) && !strstr(fn, base))
+            continue; // basename check failed
+        if ((extension != NULL) && (dotpos != NULL) && (strncmp(dotpos + 1, extension, strnlen(extension, 16))))
+            continue; // extension check failed
+        else if ((extension == NULL) != (dotpos == NULL))
+            continue; // extension check failed
+        if (!FileOpen(fn))
+            continue; // file can't be opened
+        if (fsize && (FileGetSize() != fsize)) {
+            FileClose();
+            continue; // file size check failed
+        }
+        FileClose();
+        // this is a match - keep it
+        fnptr[n_names++] = fn;
+        if (n_names * sizeof(char**) >= 0x8000)
+            return 1;
+    }
+    if (n_names == 0) {
+        Debug("No usable file found");
+        return 1;
+    }
+    
+    u32 index = 0;
+    Debug("Use arrow keys and <A> to choose a file");
+    while (true) {
+        snprintf(filename, 63, "%s", fnptr[index]);
+        Debug("\r%s", filename);
+        u32 pad_state = InputWait();
+        if (pad_state & BUTTON_DOWN) { // next filename
+            index = (index + 1) % n_names;
+        } else if (pad_state & BUTTON_UP) { // previous filename
+            index = (index > 0) ? index - 1 : n_names - 1;
+        } else if (pad_state & BUTTON_A) {
+            Debug("%s", filename);
+            break;
+        } else if (pad_state & BUTTON_B) {
+            Debug("(cancelled by user)");
+            return 2;
+        }
+    }
+    
+    return 0;
+}
+
 u32 DumpNand(u32 param)
 {
+    char filename[64];
     u8* buffer = BUFFER_ADDRESS;
     u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
     bool use_emunand = (param & N_EMUNAND);
@@ -103,7 +250,10 @@ u32 DumpNand(u32 param)
     
     Debug("Dumping %sNAND (%uMB) to file...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
 
-    if (!DebugFileCreate((use_emunand) ? "EmuNAND.bin" : "NAND.bin", true))
+    u32 fn_state = OutputFileNameSelector(filename, "NAND", "bin", use_emunand);
+    if (fn_state != 0)
+        return fn_state;
+    if (!DebugFileCreate(filename, true))
         return 1;
 
     u32 n_sectors = nand_size / NAND_SECTOR_SIZE;
@@ -160,8 +310,12 @@ u32 InjectNand(u32 param)
             WriteNandSectors(i, read_sectors, buffer, true);
         }
     } else {
+        char filename[64];
         u32 file_size;
-        if (!DebugFileOpen((param & N_EMUNANDBIN) ? "EmuNAND.bin" :"NAND.bin"))
+        u32 fn_state = InputFileNameSelector(filename, "NAND", "bin", 0);
+        if (fn_state != 0)
+            return fn_state;
+        if (!DebugFileOpen(filename))
             return 1;
         file_size = FileGetSize();
         if (file_size < nand_size_min) {

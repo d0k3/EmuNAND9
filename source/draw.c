@@ -157,6 +157,7 @@ void DebugClear()
 
 void Debug(const char *format, ...)
 {
+    static bool adv_output = true;
     char tempstr[DBG_N_CHARS_X] = { 0 };
     va_list va;
     
@@ -164,8 +165,18 @@ void Debug(const char *format, ...)
     vsnprintf(tempstr, DBG_N_CHARS_X - 1, format, va);
     va_end(va);
     
-    memmove(debugstr + DBG_N_CHARS_X, debugstr, DBG_N_CHARS_X * (DBG_N_CHARS_Y - 1));
-    snprintf(debugstr, DBG_N_CHARS_X, "%-*.*s", DBG_N_CHARS_X - 1, DBG_N_CHARS_X - 1, tempstr);
+    if (adv_output) {
+        memmove(debugstr + DBG_N_CHARS_X, debugstr, DBG_N_CHARS_X * (DBG_N_CHARS_Y - 1));
+    } else {
+        adv_output = true;
+    }
+    
+    if (*tempstr != '\r') { // not a good way of doing this - improve this later
+        snprintf(debugstr, DBG_N_CHARS_X, "%-*.*s", DBG_N_CHARS_X - 1, DBG_N_CHARS_X - 1, tempstr);
+    } else {
+        snprintf(debugstr, DBG_N_CHARS_X, "%-*.*s", DBG_N_CHARS_X - 1, DBG_N_CHARS_X - 1, tempstr + 1);
+        adv_output = false;
+    }
     
     int pos_y = DBG_START_Y;
     for (char* str = debugstr + (DBG_N_CHARS_X * (DBG_N_CHARS_Y - 1)); str >= debugstr; str -= DBG_N_CHARS_X) {
