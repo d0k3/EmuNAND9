@@ -15,9 +15,6 @@
 #define PARTITION_ALIGN     ((4 * 1024 * 1024) / 0x200)     // align at 4MB
 #define MAX_STARTER_SIZE    (16 * 1024 * 1024)              // allow to take over max 16MB boot.3dsx
 
-static u32 emunand_header = 0;
-static u32 emunand_offset = 0;
-
 u32 unlockSequence[] = { BUTTON_DOWN, BUTTON_UP, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_A };
 const char* unlockText = "<Down>, <Up>, <Left>, <Right>, <A>";
 
@@ -26,10 +23,6 @@ u32 CheckEmuNand(void)
     u8* buffer = (u8*) 0x20316200;
     u32 nand_size_sectors = getMMCDevice(0)->total_size;
     
-    // also set the EmuNAND header / offset here
-    emunand_header = 0;
-    emunand_offset = 0;
-    
     // check the MBR for presence of EmuNAND
     sdmmc_sdcard_readsectors(0, 1, buffer);
     if (nand_size_sectors > getle32(buffer + 0x1BE + 0x8))
@@ -37,19 +30,13 @@ u32 CheckEmuNand(void)
     
     // check for Gateway type EmuNAND
     sdmmc_sdcard_readsectors(nand_size_sectors, 1, buffer);
-    if (memcmp(buffer + 0x100, "NCSD", 4) == 0) {
-        emunand_header = nand_size_sectors;
-        emunand_offset = 0;
+    if (memcmp(buffer + 0x100, "NCSD", 4) == 0)
         return RES_EMUNAND_GATEWAY;
-    }
     
     // check for RedNAND type EmuNAND
     sdmmc_sdcard_readsectors(1, 1, buffer);
-    if (memcmp(buffer + 0x100, "NCSD", 4) == 0) {
-        emunand_header = 1;
-        emunand_offset = 1;
+    if (memcmp(buffer + 0x100, "NCSD", 4) == 0)
         return RES_EMUNAND_REDNAND;
-    }
         
     // EmuNAND ready but not set up
     return RES_EMUNAND_READY;
@@ -57,7 +44,20 @@ u32 CheckEmuNand(void)
 
 static inline int ReadNandSectors(u32 sector_no, u32 numsectors, u8 *out, bool use_emunand)
 {
+    u32 emunand_header = 0;
+    u32 emunand_offset = 0;
+    
     if (use_emunand) {
+        u32 emunand_state = CheckEmuNand();
+        if (emunand_state == RES_EMUNAND_GATEWAY) {
+            emunand_header = getMMCDevice(0)->total_size;
+            emunand_offset = 0;
+        } else if (emunand_state == RES_EMUNAND_REDNAND) {
+            emunand_header = 1;
+            emunand_offset = 1;
+        } else { // EmuNAND not set up
+            return 1;
+        }
         if (!emunand_header) CheckEmuNand();
         if (sector_no == 0) {
             int errorcode = sdmmc_sdcard_readsectors(emunand_header, 1, out);
@@ -70,12 +70,18 @@ static inline int ReadNandSectors(u32 sector_no, u32 numsectors, u8 *out, bool u
     } else return sdmmc_nand_readsectors(sector_no, numsectors, out);
 }
 
-static inline int WriteNandSectors(u32 sector_no, u32 numsectors, u8 *in, bool use_emunand)
+static inline int WriteNandSectors(u32 sector_no, u32 numsectors, u8 *in, u32 dest)
 {
-    if (use_emunand) {
-        if (emunand_header <= 1) {
+    u32 emunand_header = 0;
+    u32 emunand_offset = 0;
+    
+    if (dest != WR_SYSNAND) {
+        if (dest == WR_EMUNAND_GATEWAY) {
             emunand_header = getMMCDevice(0)->total_size;
             emunand_offset = 0;
+        } else {
+            emunand_header = 1;
+            emunand_offset = 1;
         }
         if (sector_no == 0) {
             int errorcode = sdmmc_sdcard_writesectors(emunand_header, 1, in);
@@ -278,11 +284,11 @@ u32 InjectNand(u32 param)
     u8* buffer = BUFFER_ADDRESS;
     u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
     u32 nand_size_min = (nand_size >= 0x4D800000) ? 0x4D800000 : 0x3AF00000;
-    bool use_emunand = (param & N_EMUNAND); // we won't inject to SysNAND
+    u32 write_dest = (param & (N_EMUNAND|N_WREDNAND)) ? WR_EMUNAND_REDNAND : WR_EMUNAND_GATEWAY; // we won't write to SysNAND
     u32 result = 0;
     u8 magic[4];
     
-    if (use_emunand && (!(param & N_NOCONFIRM))) switch(CheckEmuNand()) {
+    if ((write_dest != WR_SYSNAND) && (!(param & N_NOCONFIRM))) switch(CheckEmuNand()) {
         case RES_EMUNAND_NOT_READY:
             Debug("SD card is not formatted for EmuNAND");
             Debug("Format it first using the Format Menu");
@@ -307,7 +313,7 @@ u32 InjectNand(u32 param)
             u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
             ShowProgress(i, n_sectors);
             ReadNandSectors(i, read_sectors, buffer, false);
-            WriteNandSectors(i, read_sectors, buffer, true);
+            WriteNandSectors(i, read_sectors, buffer, write_dest);
         }
     } else {
         char filename[64];
@@ -347,7 +353,7 @@ u32 InjectNand(u32 param)
             Debug("Not a proper NAND dump!");
             return 1;
         }
-        Debug("Injecting file to %sNAND (%uMB)...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
+        Debug("Injecting file to %sNAND (%uMB)...", (write_dest == WR_SYSNAND) ? "Sys" : "Emu", nand_size / (1024 * 1024));
         for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
             u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
             ShowProgress(i, n_sectors);
@@ -355,7 +361,7 @@ u32 InjectNand(u32 param)
                 result = 1;
                 break;
             }
-            WriteNandSectors(i, read_sectors, buffer, use_emunand);
+            WriteNandSectors(i, read_sectors, buffer, write_dest);
         }
         FileClose();
     }

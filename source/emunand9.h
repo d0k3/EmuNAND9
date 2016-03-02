@@ -7,13 +7,18 @@
 #define RES_EMUNAND_GATEWAY    2
 #define RES_EMUNAND_REDNAND    3
 
+#define WR_SYSNAND          0
+#define WR_EMUNAND_GATEWAY  1
+#define WR_EMUNAND_REDNAND  2
+
 #define SD_SETUP_EMUNAND (1<<0)
 #define SD_SETUP_LEGACY  (1<<1)
 #define SD_USE_STARTER   (1<<2)
 
 #define N_EMUNAND        (1<<0)
-#define N_DIRECTCOPY     (1<<1)
-#define N_NOCONFIRM      (1<<2)
+#define N_WREDNAND       (1<<1)
+#define N_DIRECTCOPY     (1<<2)
+#define N_NOCONFIRM      (1<<3)
 
 typedef struct {
     u8  status;         // 0x80

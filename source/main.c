@@ -30,10 +30,12 @@ MenuInfo menu[] =
         }
     },
     {
-        "EmuNAND Manager Options", 4,
+        "EmuNAND Manager Options", 6,
         {
             { "Clone SysNAND to EmuNAND",     &InjectNand,            N_EMUNAND | N_DIRECTCOPY },
+            { "Clone SysNAND to RedNAND",     &InjectNand,            N_EMUNAND | N_WREDNAND | N_DIRECTCOPY },
             { "Clone file to EmuNAND",        &InjectNand,            N_EMUNAND },
+            { "Clone file to RedNAND",        &InjectNand,            N_EMUNAND | N_WREDNAND},
             { "Dump SysNAND to file",         &DumpNand,              0 },
             { "Dump EmuNAND to file",         &DumpNand,              N_EMUNAND }
         }
