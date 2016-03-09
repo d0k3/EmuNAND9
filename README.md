@@ -8,6 +8,7 @@ You can only use this if your 3DS FW is <= 9.2. There are multiple ways of runni
 * Homebrew Launcher - use EmuNAND9.3dsx to run this from Homebrew Launcher
 * Gateway 4.x browser exploit - use Launcher.dat
 * Bootstrap / Brahma - use EmuNAND9.bin
+For more detailed info on each entrypoint, take a look at the Decrypt9 readme located [here](https://github.com/d0k3/Decrypt9WIP/blob/master/README.md).
 
 ## What can this do?
 Actually, a lot! See this incomplete list:
