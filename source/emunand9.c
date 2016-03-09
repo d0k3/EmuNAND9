@@ -506,12 +506,20 @@ u32 FormatSdCard(u32 param)
         "FATSIZE:", (unsigned int) fat_size_sectors,
         "FATOFFS:", (unsigned int) fat_offset_sectors);
     mbr_info->magic         = 0xAA55;
-    part_info->status       = 0x80;
-    part_info->type         = 0x0C;
-    memcpy(part_info->chs_start, "\x01\x01\x00", 3);
-    memcpy(part_info->chs_end  , "\xFE\xFF\xFF", 3);
-    part_info->offset       = fat_offset_sectors;
-    part_info->size         = fat_size_sectors;
+    part_info[0].status     = 0x80;
+    part_info[0].type       = 0x0C;
+    memcpy(part_info[0].chs_start, "\x01\x01\x00", 3);
+    memcpy(part_info[0].chs_end  , "\xFE\xFF\xFF", 3);
+    part_info[0].offset     = fat_offset_sectors;
+    part_info[0].size       = fat_size_sectors;
+    if (setup_emunand) {
+        part_info[1].status = 0x80;
+        part_info[1].type   = 0x0C;
+        memcpy(part_info[1].chs_start, "\x01\x01\x00", 3);
+        memcpy(part_info[1].chs_end  , "\xFE\xFF\xFF", 3);
+        part_info[1].offset = 0x1;
+        part_info[1].size   = fat_offset_sectors - 0x1;
+    }
     
     // here the actual formatting takes place
     DeinitFS();
