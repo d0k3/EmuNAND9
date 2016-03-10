@@ -284,7 +284,7 @@ u32 InjectNand(u32 param)
     u8* buffer = BUFFER_ADDRESS;
     u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
     u32 nand_size_min = (nand_size >= 0x4D800000) ? 0x4D800000 : 0x3AF00000;
-    u32 write_dest = (param & (N_EMUNAND|N_WREDNAND)) ? WR_EMUNAND_REDNAND : WR_EMUNAND_GATEWAY; // we won't write to SysNAND
+    u32 write_dest = (param & N_WREDNAND) ? WR_EMUNAND_REDNAND : WR_EMUNAND_GATEWAY; // we won't write to SysNAND, so this option is not included
     u32 result = 0;
     u8 magic[4];
     
