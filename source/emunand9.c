@@ -514,11 +514,11 @@ u32 FormatSdCard(u32 param)
     part_info[0].size       = fat_size_sectors;
     if (setup_emunand) {
         part_info[1].status = 0x80;
-        part_info[1].type   = 0x0C;
+        part_info[1].type   = 0x1C;
         memcpy(part_info[1].chs_start, "\x01\x01\x00", 3);
         memcpy(part_info[1].chs_end  , "\xFE\xFF\xFF", 3);
         part_info[1].offset = 0x1;
-        part_info[1].size   = fat_offset_sectors - 0x1;
+        part_info[1].size   = nand_size_sectors - 0x1;
     }
     
     // here the actual formatting takes place
