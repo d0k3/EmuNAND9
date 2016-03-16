@@ -512,7 +512,11 @@ int SD_Init()
 {
 	inittarget(&handelSD);
 	//waitcycles(0x3E8);
-	waitcycles(0xF000);
+	//waitcycles(0xF000);
+    
+    waitcycles(1u << 19); //Card needs a little bit of time to be detected, it seems
+    if (!(*((volatile uint16_t*)0x1000601c) & TMIO_STAT0_SIGSTATE)) return -1; // check if card inserted
+    
 	DEBUGPRINT(topScreen, "0x00000 ", handelSD.error, 10, 20 + 14*8, RGB(40, 40, 40), RGB(208, 208, 208));
 	sdmmc_send_command(&handelSD,0,0);
 	DEBUGPRINT(topScreen, "0x10408 ", handelSD.error, 10, 20 + 14*8, RGB(40, 40, 40), RGB(208, 208, 208));
@@ -607,7 +611,7 @@ int SD_Init()
 	return 0;
 }
 
-void sdmmc_sdcard_init()
+int sdmmc_sdcard_init()
 {
 	DEBUGPRINT(topScreen, "sdmmc_sdcard_init ", handelSD.error, 10, 20 + 2*8, RGB(40, 40, 40), RGB(208, 208, 208));
 	InitSD();
@@ -615,6 +619,50 @@ void sdmmc_sdcard_init()
 	//Nand_Init();
 	Nand_Init();
 	DEBUGPRINT(topScreen, "nand_res ", nand_res, 10, 20 + 3*8, RGB(40, 40, 40), RGB(208, 208, 208));
-	SD_Init();
+	if (SD_Init() != 0) return FALSE;
 	DEBUGPRINT(topScreen, "sd_res ", sd_res, 10, 20 + 4*8, RGB(40, 40, 40), RGB(208, 208, 208));
+    
+    return TRUE;
+}
+
+int sdmmc_get_cid( int isNand, uint32_t *info)
+{
+	struct mmcdevice *device;
+	if(isNand)
+		device = &handelNAND;
+	else
+		device = &handelSD;
+	
+	inittarget(device);
+	// use cmd7 to put sd card in standby mode
+	// CMD7
+	{
+		sdmmc_send_command(device,0x10507,0);
+		//if((device->error & 0x4)) return -1;
+	}
+
+	// get sd card info
+	// use cmd10 to read CID
+	{
+		sdmmc_send_command(device,0x1060A,device->initarg << 0x10);
+		//if((device->error & 0x4)) return -2;
+
+		for( int i = 0; i < 4; ++i ) {
+			info[i] = device->ret[i];
+		}
+	}
+
+	// put sd card back to transfer mode
+	// CMD7
+	{
+		sdmmc_send_command(device,0x10507,device->initarg << 0x10);
+		//if((device->error & 0x4)) return -3;
+	}
+
+	if(isNand)
+	{
+		inittarget(&handelSD);
+	}
+	
+	return 0;
 }

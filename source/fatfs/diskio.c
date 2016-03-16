@@ -34,7 +34,8 @@ DSTATUS disk_initialize (
 	BYTE pdrv				/* Physical drive nmuber to identify the drive */
 )
 {
-	sdmmc_sdcard_init();
+	if (!sdmmc_sdcard_init())
+        return RES_PARERR;
 	return RES_OK;
 }
 
