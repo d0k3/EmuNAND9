@@ -296,8 +296,9 @@ u32 DumpNand(u32 param)
     for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
         u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
         ShowProgress(i, n_sectors);
-        ReadNandSectors(i, read_sectors, buffer, use_emunand);
-        if(!DebugFileWrite(buffer, NAND_SECTOR_SIZE * read_sectors, i * NAND_SECTOR_SIZE)) {
+        if ((ReadNandSectors(i, read_sectors, buffer, use_emunand) != 0) ||
+            !FileWrite(buffer, NAND_SECTOR_SIZE * read_sectors, i * NAND_SECTOR_SIZE)) {
+            Debug("NAND or SD i/o failure");
             result = 1;
             break;
         }
@@ -340,8 +341,12 @@ u32 InjectNand(u32 param)
         for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
             u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
             ShowProgress(i, n_sectors);
-            ReadNandSectors(i, read_sectors, buffer, false);
-            WriteNandSectors(i, read_sectors, buffer, write_dest);
+            if ((ReadNandSectors(i, read_sectors, buffer, false) != 0) ||
+                (WriteNandSectors(i, read_sectors, buffer, write_dest) != 0)) {
+                Debug("NAND or SD i/o failure");
+                result = 1;
+                break;
+            }
         }
     } else {
         char filename[64];
@@ -387,11 +392,13 @@ u32 InjectNand(u32 param)
         for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
             u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
             ShowProgress(i, n_sectors);
-            if(!DebugFileRead(buffer, NAND_SECTOR_SIZE * read_sectors, i * NAND_SECTOR_SIZE)) {
+            if (!FileRead(buffer, NAND_SECTOR_SIZE * read_sectors, i * NAND_SECTOR_SIZE) ||
+                (WriteNandSectors(i, read_sectors, buffer, write_dest) != 0)) {
+                Debug("SD card i/o failure"); // SysNAND is stubbed!
                 result = 1;
                 break;
             }
-            WriteNandSectors(i, read_sectors, buffer, write_dest);
+            
         }
         FileClose();
     }
