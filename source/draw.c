@@ -112,12 +112,12 @@ void Screenshot(const char* path)
         0x00, 0x00, 0x00, 0xCA, 0x08, 0x00, 0x12, 0x0B, 0x00, 0x00, 0x12, 0x0B, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
-    static u32 n = 0;
     
     if (!CheckFS()) // not mounted, nothing to do
         return;
     
     if (path == NULL) {
+        static u32 n = 0;
         for (; n < 1000; n++) {
             char filename[16];
             snprintf(filename, 16, "snap%03i.bmp", (int) n);

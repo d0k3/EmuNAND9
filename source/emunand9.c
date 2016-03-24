@@ -1,6 +1,7 @@
 #include "fs.h"
 #include "draw.h"
 #include "hid.h"
+#include "platform.h"
 #include "emunand9.h"
 #include "fatfs/sdmmc.h"
 
@@ -11,11 +12,39 @@
 #define NAND_SECTOR_SIZE ((u32)0x200)
 #define SECTORS_PER_READ (BUFFER_MAX_SIZE / NAND_SECTOR_SIZE)
 
-#define SD_MINFREE_SECTORS  ((1024 * 1024 * 1024) / 0x200)  // have at least 1GB free
+#define SD_MINFREE_SECTORS  ((256 * 1024 * 1024) / 0x200)  // have at least 256MB free
 #define PARTITION_ALIGN     ((4 * 1024 * 1024) / 0x200)     // align at 4MB
 #define MAX_STARTER_SIZE    (16 * 1024 * 1024)              // allow to take over max 16MB boot.3dsx
 
-u32 unlockSequence[] = { BUTTON_DOWN, BUTTON_UP, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_A };
+// minimum sizes for O3DS / N3DS NAND
+// see: http://3dbrew.org/wiki/Flash_Filesystem
+#define NAND_MIN_SIZE ((GetUnitPlatform() == PLATFORM_3DS) ? 0x3AF00000 : 0x4D800000)
+
+// see below
+#define IS_NAND_HEADER(hdr) ((memcmp(buffer + 0x100, nand_magic_n3ds, 0x60) == 0) ||\
+                             (memcmp(buffer + 0x100, nand_magic_o3ds, 0x60) == 0))
+
+// from an actual N3DS NCSD NAND header, same for all
+static u8 nand_magic_n3ds[0x60] = {
+    0x4E, 0x43, 0x53, 0x44, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x01, 0x04, 0x03, 0x03, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x02, 0x02, 0x03, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x88, 0x05, 0x00, 0x00, 0x88, 0x05, 0x00, 0x80, 0x01, 0x00, 0x00,
+    0x80, 0x89, 0x05, 0x00, 0x00, 0x20, 0x00, 0x00, 0x80, 0xA9, 0x05, 0x00, 0x00, 0x20, 0x00, 0x00,
+    0x80, 0xC9, 0x05, 0x00, 0x80, 0xF6, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+// from an actual O3DS NCSD NAND header, same for all
+static u8 nand_magic_o3ds[0x60] = {
+    0x4E, 0x43, 0x53, 0x44, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x01, 0x04, 0x03, 0x03, 0x01, 0x00, 0x00, 0x00, 0x01, 0x02, 0x02, 0x02, 0x02, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x88, 0x05, 0x00, 0x00, 0x88, 0x05, 0x00, 0x80, 0x01, 0x00, 0x00,
+    0x80, 0x89, 0x05, 0x00, 0x00, 0x20, 0x00, 0x00, 0x80, 0xA9, 0x05, 0x00, 0x00, 0x20, 0x00, 0x00,
+    0x80, 0xC9, 0x05, 0x00, 0x80, 0xAE, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+const u32 unlockSequence[] = { BUTTON_DOWN, BUTTON_UP, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_A };
 const char* unlockText = "<Down>, <Up>, <Left>, <Right>, <A>";
 
 u32 CheckEmuNand(void)
@@ -30,12 +59,12 @@ u32 CheckEmuNand(void)
     
     // check for Gateway type EmuNAND
     sdmmc_sdcard_readsectors(nand_size_sectors, 1, buffer);
-    if (memcmp(buffer + 0x100, "NCSD", 4) == 0)
+    if (IS_NAND_HEADER(buffer))
         return RES_EMUNAND_GATEWAY;
     
     // check for RedNAND type EmuNAND
     sdmmc_sdcard_readsectors(1, 1, buffer);
-    if (memcmp(buffer + 0x100, "NCSD", 4) == 0)
+    if (IS_NAND_HEADER(buffer))
         return RES_EMUNAND_REDNAND;
         
     // EmuNAND ready but not set up
@@ -44,11 +73,10 @@ u32 CheckEmuNand(void)
 
 static inline int ReadNandSectors(u32 sector_no, u32 numsectors, u8 *out, bool use_emunand)
 {
-    u32 emunand_header = 0;
-    u32 emunand_offset = 0;
-    
     if (use_emunand) {
         u32 emunand_state = CheckEmuNand();
+        u32 emunand_header = 0;
+        u32 emunand_offset = 0;    
         if (emunand_state == RES_EMUNAND_GATEWAY) {
             emunand_header = getMMCDevice(0)->total_size;
             emunand_offset = 0;
@@ -66,16 +94,15 @@ static inline int ReadNandSectors(u32 sector_no, u32 numsectors, u8 *out, bool u
             numsectors--;
             out += 0x200;
         }
-        return sdmmc_sdcard_readsectors(sector_no + emunand_offset, numsectors, out);
+        return (numsectors) ? sdmmc_sdcard_readsectors(sector_no + emunand_offset, numsectors, out) : 0;
     } else return sdmmc_nand_readsectors(sector_no, numsectors, out);
 }
 
 static inline int WriteNandSectors(u32 sector_no, u32 numsectors, u8 *in, u32 dest)
 {
-    u32 emunand_header = 0;
-    u32 emunand_offset = 0;
-    
     if (dest != WR_SYSNAND) {
+        u32 emunand_header = 0;
+        u32 emunand_offset = 0;
         if (dest == WR_EMUNAND_GATEWAY) {
             emunand_header = getMMCDevice(0)->total_size;
             emunand_offset = 0;
@@ -90,7 +117,7 @@ static inline int WriteNandSectors(u32 sector_no, u32 numsectors, u8 *in, u32 de
             numsectors--;
             in += 0x200;
         }
-        return sdmmc_sdcard_writesectors(sector_no + emunand_offset, numsectors, in);
+        return (numsectors) ? sdmmc_sdcard_writesectors(sector_no + emunand_offset, numsectors, in) : 0;
     } else return 0; // return sdmmc_nand_writesectors(sector_no, numsectors, in);
     // SysNAND write stubbed - not needed here, no need to take the risk
 }
@@ -132,7 +159,6 @@ static inline u32 OutputFileNameSelector(char* filename, const char* basename, c
         u32 pad_state = InputWait();
         if (pad_state & BUTTON_DOWN) { // increment filename id
             fn_id = (fn_id + 1) % 3;
-            fn_num = 0;
         } else if (pad_state & BUTTON_UP) { // decrement filename id
             fn_id = (fn_id > 0) ? fn_id - 1 : 2;
         } else if ((pad_state & BUTTON_RIGHT) && (fn_num < 9)) { // increment number
@@ -165,16 +191,10 @@ static inline u32 OutputFileNameSelector(char* filename, const char* basename, c
     return 0;
 }
 
-static inline u32 InputFileNameSelector(char* filename, const char* basename, char* extension, u32 fsize) {
+static inline u32 InputFileNameSelector(char* filename, const char* basename, char* extension, u32 fminsize) {
     char** fnptr = (char**) 0x20400000; // allow using 0x8000 byte
     char* fnlist = (char*) 0x20408000; // allow using 0x80000 byte
     u32 n_names = 0;
-    
-    // get the file list - try work directory first
-    if (!GetFileList(WORK_DIR, fnlist, 0x80000, false) && !GetFileList("/", fnlist, 0x800000, false)) {
-        Debug("Failed retrieving the file names list");
-        return 1;
-    }
     
     // get base name, extension
     char base[64] = { 0 };
@@ -189,30 +209,40 @@ static inline u32 InputFileNameSelector(char* filename, const char* basename, ch
         }
     }
     
-    // parse the file names list for usable entries
-    for (char* fn = strtok(fnlist, "\n"); fn != NULL; fn = strtok(NULL, "\n")) {
-        char* dotpos = strrchr(fn, '.');
-        if (strrchr(fn, '/'))
-            fn = strrchr(fn, '/') + 1;
-        if (strnlen(fn, 128) > 63)
-            continue; // file name too long
-        if ((basename != NULL) && !strstr(fn, base))
-            continue; // basename check failed
-        if ((extension != NULL) && (dotpos != NULL) && (strncmp(dotpos + 1, extension, strnlen(extension, 16))))
-            continue; // extension check failed
-        else if ((extension == NULL) != (dotpos == NULL))
-            continue; // extension check failed
-        if (!FileOpen(fn))
-            continue; // file can't be opened
-        if (fsize && (FileGetSize() != fsize)) {
+    // pass #1 -> work dir
+    // pass #2 -> root dir
+    for (u32 i = 0; i < 2; i++) {
+        // get the file list - try work directory first
+        if (!GetFileList((i) ? "/" : WORK_DIR, fnlist, 0x80000, false))
+            continue;
+        
+        // parse the file names list for usable entries
+        for (char* fn = strtok(fnlist, "\n"); fn != NULL; fn = strtok(NULL, "\n")) {
+            char* dotpos = strrchr(fn, '.');
+            if (strrchr(fn, '/'))
+                fn = strrchr(fn, '/') + 1;
+            if (strnlen(fn, 128) > 63)
+                continue; // file name too long
+            if ((basename != NULL) && !strcasestr(fn, base))
+                continue; // basename check failed
+            if ((extension != NULL) && (dotpos != NULL) && (strncasecmp(dotpos + 1, extension, strnlen(extension, 16))))
+                continue; // extension check failed
+            else if ((extension == NULL) != (dotpos == NULL))
+                continue; // extension check failed
+            if (!FileOpen(fn))
+                continue; // file can't be opened
+            if (fminsize && (FileGetSize() < fminsize)) {
+                FileClose();
+                continue; // file size check failed
+            }
             FileClose();
-            continue; // file size check failed
+            // this is a match - keep it
+            fnptr[n_names++] = fn;
+            if (n_names * sizeof(char**) >= 0x8000)
+                return 1;
         }
-        FileClose();
-        // this is a match - keep it
-        fnptr[n_names++] = fn;
-        if (n_names * sizeof(char**) >= 0x8000)
-            return 1;
+        if (n_names)
+            break;
     }
     if (n_names == 0) {
         Debug("No usable file found");
@@ -283,10 +313,8 @@ u32 InjectNand(u32 param)
 {
     u8* buffer = BUFFER_ADDRESS;
     u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
-    u32 nand_size_min = (nand_size >= 0x4D800000) ? 0x4D800000 : 0x3AF00000;
     u32 write_dest = (param & N_WREDNAND) ? WR_EMUNAND_REDNAND : WR_EMUNAND_GATEWAY; // we won't write to SysNAND, so this option is not included
     u32 result = 0;
-    u8 magic[4];
     
     if ((write_dest != WR_SYSNAND) && (!(param & N_NOCONFIRM))) switch(CheckEmuNand()) {
         case RES_EMUNAND_NOT_READY:
@@ -318,13 +346,23 @@ u32 InjectNand(u32 param)
     } else {
         char filename[64];
         u32 file_size;
-        u32 fn_state = InputFileNameSelector(filename, "NAND", "bin", 0);
+        u32 fn_state = InputFileNameSelector(filename, "NAND", "bin", NAND_MIN_SIZE);
+        
         if (fn_state != 0)
             return fn_state;
         if (!DebugFileOpen(filename))
             return 1;
         file_size = FileGetSize();
-        if (file_size < nand_size_min) {
+        if(!DebugFileRead(buffer, 0x200, 0)) {
+            FileClose();
+            return 1;
+        }
+        if (IS_NAND_HEADER(buffer)) {
+            FileClose();
+            Debug("Not a proper NAND dump!");
+            return 1;
+        }
+        if (file_size < NAND_MIN_SIZE) {
             Debug("NAND dump misses data!");
             FileClose();
             return 1;
@@ -344,15 +382,7 @@ u32 InjectNand(u32 param)
             if (file_size < nand_size) // can only write as much sectors as there are
                 n_sectors = file_size / NAND_SECTOR_SIZE;
         }
-        if(!DebugFileRead(magic, 4, 0x100)) {
-            FileClose();
-            return 1;
-        }
-        if (memcmp(magic, "NCSD", 4) != 0) {
-            FileClose();
-            Debug("Not a proper NAND dump!");
-            return 1;
-        }
+        
         Debug("Injecting file to %sNAND (%uMB)...", (write_dest == WR_SYSNAND) ? "Sys" : (write_dest == WR_EMUNAND_GATEWAY) ? "Emu" : "Red", nand_size / (1024 * 1024));
         for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
             u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
@@ -518,7 +548,7 @@ u32 FormatSdCard(u32 param)
         memcpy(part_info[1].chs_start, "\x01\x01\x00", 3);
         memcpy(part_info[1].chs_end  , "\xFE\xFF\xFF", 3);
         part_info[1].offset = 0x1;
-        part_info[1].size   = nand_size_sectors - 0x1;
+        part_info[1].size   = nand_size_sectors;
     }
     
     // here the actual formatting takes place

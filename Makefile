@@ -37,7 +37,7 @@ CFLAGS	:=	-g -Wall -O2 -Wextra\
 			-ffast-math -std=c99\
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DEXEC_$(EXEC_METHOD) -DARM9
+CFLAGS	+=	$(INCLUDE) -DEXEC_$(EXEC_METHOD) -DARM9 -D_GNU_SOURCE
 
 CFLAGS	+=	-DBUILD_NAME="\"$(TARGET) (`date +'%Y/%m/%d'`)\""
 

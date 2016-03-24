@@ -10,7 +10,7 @@ u32 InputWait() {
     }
 }
 
-u32 CheckSequence(u32* sequence, u32 len) {
+u32 CheckSequence(const u32* sequence, u32 len) {
     u32 pad_state;
     u32 lvl = 0;
     while (true) {

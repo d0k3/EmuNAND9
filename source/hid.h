@@ -19,4 +19,4 @@
 #define BUTTON_ANY    0x00000FFF
 
 u32 InputWait();
-u32 CheckSequence(u32* sequence, u32 len);
+u32 CheckSequence(const u32* sequence, u32 len);
