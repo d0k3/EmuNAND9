@@ -12,12 +12,13 @@ MenuInfo menu[] =
 {
     {
         #ifndef BUILD_NAME
-        "EmuNAND9 Main Menu", 3,
+        "EmuNAND9 Main Menu", 4,
         #else
-        BUILD_NAME, 3,
+        BUILD_NAME, 4,
         #endif
         {
             { "Complete EmuNAND Setup",       &CompleteSetupEmuNand,  0 },
+            { "Complete RedNAND Setup",       &CompleteSetupEmuNand,  SD_SETUP_MINSIZE | N_WREDNAND },
             { "SD Format Options...",         NULL,                   SUBMENU_START + 0 },
             { "EmuNAND Manager Options...",   NULL,                   SUBMENU_START + 1 }
         }
@@ -41,18 +42,20 @@ MenuInfo menu[] =
         }
     },
     {
-        "Format SD...", 3,
+        "Format SD...", 4,
         {
             { "... without EmuNAND",          &FormatSdCard,          0 },
             { "... for EmuNAND (default)",    &FormatSdCard,          SD_SETUP_EMUNAND },
+            { "... for EmuNAND (minsize)",    &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_MINSIZE },
             { "... for EmuNAND (legacy)",     &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
         }
     },
     {
-        "Format SD & setup starter...", 3,
+        "Format SD & setup starter...", 4,
         {
             { "... without EmuNAND",          &FormatSdCard,          SD_USE_STARTER },
             { "... for EmuNAND (default)",    &FormatSdCard,          SD_USE_STARTER | SD_SETUP_EMUNAND },
+            { "... for EmuNAND (minsize)",    &FormatSdCard,          SD_USE_STARTER | SD_SETUP_EMUNAND | SD_SETUP_MINSIZE },
             { "... for EmuNAND (legacy)",     &FormatSdCard,          SD_USE_STARTER | SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
         }
     },

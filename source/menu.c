@@ -55,9 +55,9 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
             DrawStringF(menublock_x1, SCREEN_HEIGHT - 20, top_screen, "SD storage: unknown filesystem");
         }
         DrawStringF(menublock_x1, SCREEN_HEIGHT - 30, top_screen, "EmuNAND: %s",
-            (emunand_state == RES_EMUNAND_READY) ? "SD is ready" :
+            (emunand_state == RES_EMUNAND_NOT_READY) ? "SD not ready" :
             (emunand_state == RES_EMUNAND_GATEWAY) ? "GW EmuNAND" : 
-            (emunand_state == RES_EMUNAND_GATEWAY) ? "RedNAND" : "SD not ready" );
+            (emunand_state == RES_EMUNAND_REDNAND) ? "RedNAND" : "SD is ready" );
         #ifdef WORK_DIR
         if (DirOpen(WORK_DIR)) {
             DrawStringF(menublock_x1, SCREEN_HEIGHT - 40, top_screen, "Work directory: %s", WORK_DIR);

@@ -47,28 +47,35 @@ static u8 nand_magic_o3ds[0x60] = {
 const u32 unlockSequence[] = { BUTTON_DOWN, BUTTON_UP, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_A };
 const char* unlockText = "<Down>, <Up>, <Left>, <Right>, <A>";
 
+static inline u32 GetEmuNandPartitionSectors(void)
+{
+    u8* mbr = (u8*) 0x20316400;
+    sdmmc_sdcard_readsectors(0, 1, mbr);
+    return getle32(mbr + 0x1BE + 0x8) - 1;
+}
+
 u32 CheckEmuNand(void)
 {
     u8* buffer = (u8*) 0x20316200;
     u32 nand_size_sectors = getMMCDevice(0)->total_size;
+    u32 hidden_sectors = GetEmuNandPartitionSectors();
     
-    // check the MBR for presence of EmuNAND
-    sdmmc_sdcard_readsectors(0, 1, buffer);
-    if (nand_size_sectors > getle32(buffer + 0x1BE + 0x8))
-        return RES_EMUNAND_NOT_READY;
+    if (hidden_sectors >= NAND_MIN_SIZE / NAND_SECTOR_SIZE) {
+        // check for RedNAND type EmuNAND
+        sdmmc_sdcard_readsectors(1, 1, buffer);
+        if (IS_NAND_HEADER(buffer))
+            return RES_EMUNAND_REDNAND;
+        if (hidden_sectors >= nand_size_sectors) {
+            // check for Gateway type EmuNAND
+            sdmmc_sdcard_readsectors(nand_size_sectors, 1, buffer);
+            if (IS_NAND_HEADER(buffer))
+                return RES_EMUNAND_GATEWAY;
+        }
+        // EmuNAND ready but not set up
+        return RES_EMUNAND_READY;
+    }
     
-    // check for Gateway type EmuNAND
-    sdmmc_sdcard_readsectors(nand_size_sectors, 1, buffer);
-    if (IS_NAND_HEADER(buffer))
-        return RES_EMUNAND_GATEWAY;
-    
-    // check for RedNAND type EmuNAND
-    sdmmc_sdcard_readsectors(1, 1, buffer);
-    if (IS_NAND_HEADER(buffer))
-        return RES_EMUNAND_REDNAND;
-        
-    // EmuNAND ready but not set up
-    return RES_EMUNAND_READY;
+    return RES_EMUNAND_NOT_READY;
 }
 
 static inline int ReadNandSectors(u32 sector_no, u32 numsectors, u8 *out, bool use_emunand)
@@ -276,6 +283,7 @@ u32 DumpNand(u32 param)
     char filename[64];
     u8* buffer = BUFFER_ADDRESS;
     u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
+    u32 hidden_partition = GetEmuNandPartitionSectors() * NAND_SECTOR_SIZE;
     bool use_emunand = (param & N_EMUNAND);
     u32 result = 0;
 
@@ -283,6 +291,9 @@ u32 DumpNand(u32 param)
         Debug("EmuNAND not found on SD card");
         return 1;
     }
+    
+    if (use_emunand && (hidden_partition < nand_size))
+        nand_size = NAND_MIN_SIZE;
     
     Debug("Dumping %sNAND (%uMB) to file...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
 
@@ -313,7 +324,9 @@ u32 DumpNand(u32 param)
 u32 InjectNand(u32 param)
 {
     u8* buffer = BUFFER_ADDRESS;
-    u32 nand_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
+    u32 hidden_partition = GetEmuNandPartitionSectors() * NAND_SECTOR_SIZE;
+    u32 nand_full_size = getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
+    u32 nand_size = nand_full_size;
     u32 write_dest = (param & N_WREDNAND) ? WR_EMUNAND_REDNAND : WR_EMUNAND_GATEWAY; // we won't write to SysNAND, so this option is not included
     u32 result = 0;
     
@@ -334,6 +347,29 @@ u32 InjectNand(u32 param)
                 return 2;
             Debug("");
     }
+    
+    if ((hidden_partition < nand_size) && (hidden_partition >= NAND_MIN_SIZE)) {
+        if (!(param & N_NOCONFIRM) && (write_dest != WR_EMUNAND_REDNAND)) {
+            Debug("Not enough room for GW EmuNAND on SD");
+            Debug("Use RedNAND instead of GW EmuNAND?");
+            Debug("(A to confirm, B to cancel)");
+            while(true) {
+                u32 pad_state = InputWait();
+                if (pad_state & BUTTON_A) break;
+                else if (pad_state & BUTTON_B) {
+                    FileClose();
+                    return 2;
+                }
+            }
+        }
+        write_dest = WR_EMUNAND_REDNAND;
+        nand_size = NAND_MIN_SIZE;
+    } else if (hidden_partition < nand_size) {
+        return 1;
+    }
+    
+    if (CheckEmuNand() == RES_EMUNAND_NOT_READY) // better be safe
+        return 1;
     
     u32 n_sectors = nand_size / NAND_SECTOR_SIZE;
     if (param & N_DIRECTCOPY) {
@@ -371,8 +407,8 @@ u32 InjectNand(u32 param)
             Debug("NAND dump misses data!");
             FileClose();
             return 1;
-        } else if (file_size != nand_size) {
-            Debug("NAND dump is %s than NAND memory chip.", (file_size < nand_size) ? "smaller" : "bigger");
+        } else if ((file_size != nand_full_size) && (file_size != NAND_MIN_SIZE)) {
+            Debug("NAND dump is %s than NAND memory chip.", (file_size < nand_full_size) ? "smaller" : "bigger");
             Debug("This may happen with dumps from other tools.");
             Debug("Are you sure this dump is valid?");
             Debug("(A to proceed, B to cancel)");
@@ -414,10 +450,9 @@ u32 FormatSdCard(u32 param)
     u8* buffer = (u8*) 0x21000000;
     
     bool setup_emunand = (param & SD_SETUP_EMUNAND);
-    bool setup_legacy = (param & SD_SETUP_LEGACY);
     u32 starter_size = (param & SD_USE_STARTER) ? 1 : 0;
     
-    u32 nand_size_sectors  = getMMCDevice(0)->total_size;
+    u32 nand_size_sectors  = (param & SD_SETUP_MINSIZE) ? (NAND_MIN_SIZE / NAND_SECTOR_SIZE) : getMMCDevice(0)->total_size;
     u32 sd_size_sectors    = 0;
     u32 sd_emunand_sectors = 0;
     u32 fat_offset_sectors = 0;
@@ -523,7 +558,7 @@ u32 FormatSdCard(u32 param)
    
     // set FAT partition offset and size
     if (setup_emunand) {
-        sd_emunand_sectors = (setup_legacy) ? align(nand_size_sectors + 1, 0x200000) - 1 : nand_size_sectors;
+        sd_emunand_sectors = ((param & SD_SETUP_LEGACY)) ? align(nand_size_sectors + 1, 0x200000) - 1 : nand_size_sectors;
         if (sd_emunand_sectors + SD_MINFREE_SECTORS + 1 > sd_size_sectors) {
             Debug("SD is too small for EmuNAND!");
             return 1;
@@ -615,9 +650,8 @@ u32 FormatSdCard(u32 param)
 
 u32 CompleteSetupEmuNand(u32 param)
 {
-    (void)param; // Unused
-    u32 res = FormatSdCard(SD_SETUP_EMUNAND | SD_USE_STARTER);
+    u32 res = FormatSdCard(SD_SETUP_EMUNAND | SD_USE_STARTER | param);
     if (res != 0) return res;
     Debug("");
-    return InjectNand(N_EMUNAND | N_DIRECTCOPY | N_NOCONFIRM);
+    return InjectNand(N_EMUNAND | N_DIRECTCOPY | N_NOCONFIRM | param);
 }
