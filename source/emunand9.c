@@ -648,6 +648,94 @@ u32 FormatSdCard(u32 param)
     return 0;
 }
 
+u32 ConvertEmuNand(u32 param)
+{
+    u8* buffer = BUFFER_ADDRESS;
+    u8  header[0x200];
+    u32 hidden_sectors = GetEmuNandPartitionSectors();
+    u32 nand_sectors = getMMCDevice(0)->total_size;
+    u32 emunand_state = CheckEmuNand();
+    
+    if (emunand_state <= RES_EMUNAND_READY) {
+        Debug("No EmuNAND on this SD, nothing to do");
+        return 1;
+    } else if ((param & N_WREDNAND) && (emunand_state == RES_EMUNAND_REDNAND)) {
+        Debug("RedNAND already set up, nothing to do");
+        return 1;
+    } else if (!(param & N_WREDNAND) && (emunand_state == RES_EMUNAND_GATEWAY)) {
+        Debug("GW EmuNAND already set up, nothing to do");
+        return 1;
+    }
+    
+    if (hidden_sectors < nand_sectors) {
+        if (hidden_sectors < NAND_MIN_SIZE / NAND_SECTOR_SIZE) {
+            Debug("Faulty EmuNAND / SD, stopping here");
+            return 1;
+        } else if (!(param & N_WREDNAND)) {
+            Debug("Not enough space for GW type EmuNAND");
+            return 1;
+        }
+        nand_sectors = NAND_MIN_SIZE / NAND_SECTOR_SIZE;
+    }
+    
+    if (param & N_WREDNAND) { 
+        Debug("This will convert your EmuNAND -> RedNAND");
+        Debug("Your CFW might not be compatible with this");
+    } else {
+        Debug("This will convert your RedNAND -> EmuNAND");
+    }
+    Debug("If you wish to proceed, enter:");
+    Debug(unlockText);
+    Debug("(B to cancel)");
+    if (CheckSequence(unlockSequence, sizeof(unlockSequence) / sizeof(u32)) != 0)
+        return 2;
+    Debug("");
+    
+    // store header in memory
+    Debug("Converting %s (%uMB)", (param & N_WREDNAND) ? "EmuNAND -> RedNAND" : "RedNAND -> EmuNAND",
+        (nand_sectors * 512) / (1024 * 1024));
+    if (ReadNandSectors(0, 1, header, true) != 0) {
+        Debug("Header read failure");
+        return 1;
+    }
+    u32 result = 0;
+    if (param & N_WREDNAND) { // Gateway EmuNAND -> RedNAND
+        for (u32 i = 1; i < nand_sectors; i += SECTORS_PER_READ) {
+            u32 read_sectors = min(SECTORS_PER_READ, (nand_sectors - i));
+            u32 p = nand_sectors - (i-1) - read_sectors; // need to process this in reverse
+            ShowProgress(i, nand_sectors);
+            if ((sdmmc_sdcard_readsectors(p, read_sectors, buffer) != 0) ||
+                (sdmmc_sdcard_writesectors(p + 1, read_sectors, buffer) != 0)) {
+                Debug("SD card i/o failure");
+                result = 1;
+                break;
+            }
+        }
+        if (WriteNandSectors(0, 1, header, WR_EMUNAND_REDNAND) != 0) {
+            Debug("Header write failure");
+            result = 1;
+        }
+    } else { // RedNAND -> Gateway EmuNAND
+        for (u32 i = 1; i < nand_sectors; i += SECTORS_PER_READ) {
+            u32 read_sectors = min(SECTORS_PER_READ, (nand_sectors - i));
+            ShowProgress(i, nand_sectors);
+            if ((sdmmc_sdcard_readsectors(i + 1, read_sectors, buffer) != 0) ||
+                (sdmmc_sdcard_writesectors(i, read_sectors, buffer) != 0)) {
+                Debug("SD card i/o failure");
+                result = 1;
+            }
+        }
+        if (WriteNandSectors(0, 1, header, WR_EMUNAND_GATEWAY) != 0) {
+            Debug("Header write failure");
+            result = 1;
+        }
+    }
+    ShowProgress(0, 0);
+    
+    
+    return result;
+}
+
 u32 CompleteSetupEmuNand(u32 param)
 {
     u32 res = FormatSdCard(SD_SETUP_EMUNAND | SD_USE_STARTER | param);

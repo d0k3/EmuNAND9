@@ -31,14 +31,16 @@ MenuInfo menu[] =
         }
     },
     {
-        "EmuNAND Manager Options", 6,
+        "EmuNAND Manager Options", 8,
         {
             { "Clone SysNAND to EmuNAND",     &InjectNand,            N_EMUNAND | N_DIRECTCOPY },
             { "Clone SysNAND to RedNAND",     &InjectNand,            N_EMUNAND | N_WREDNAND | N_DIRECTCOPY },
-            { "Clone file to EmuNAND",        &InjectNand,            N_EMUNAND },
-            { "Clone file to RedNAND",        &InjectNand,            N_EMUNAND | N_WREDNAND},
-            { "Dump SysNAND to file",         &DumpNand,              0 },
-            { "Dump EmuNAND to file",         &DumpNand,              N_EMUNAND }
+            { "Restore file to EmuNAND",      &InjectNand,            N_EMUNAND },
+            { "Restore file to RedNAND",      &InjectNand,            N_EMUNAND | N_WREDNAND},
+            { "Backup SysNAND to file",       &DumpNand,              0 },
+            { "Backup EmuNAND to file",       &DumpNand,              N_EMUNAND },
+            { "Convert EmuNAND -> RedNAND",   &ConvertEmuNand,        N_EMUNAND | N_WREDNAND },
+            { "Convert RedNAND -> EmuNAND",   &ConvertEmuNand,        N_EMUNAND }
         }
     },
     {

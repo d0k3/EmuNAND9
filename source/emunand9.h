@@ -109,5 +109,6 @@ u32 CheckEmuNand(void);
 
 u32 DumpNand(u32 param);
 u32 InjectNand(u32 param);
+u32 ConvertEmuNand(u32 param);
 u32 FormatSdCard(u32 param);
 u32 CompleteSetupEmuNand(u32 param);
