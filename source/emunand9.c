@@ -398,7 +398,7 @@ u32 InjectNand(u32 param)
             FileClose();
             return 1;
         }
-        if (IS_NAND_HEADER(buffer)) {
+        if (!IS_NAND_HEADER(buffer)) {
             FileClose();
             Debug("Not a proper NAND dump!");
             return 1;
