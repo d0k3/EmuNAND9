@@ -684,6 +684,7 @@ u32 ConvertEmuNand(u32 param)
     } else {
         Debug("This will convert your RedNAND -> EmuNAND");
     }
+    Debug("Creating a backup before this is recommended");
     Debug("If you wish to proceed, enter:");
     Debug(unlockText);
     Debug("(B to cancel)");
