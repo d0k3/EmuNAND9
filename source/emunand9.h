@@ -72,7 +72,7 @@ typedef struct {
     u8   head_cur;      // 0x00
     u8   boot_sig;      // 0x29
     u32  vol_id;        // volume id / 0x00
-    u8   vol_label[11]; // "DECRYPT9SD "
+    u8   vol_label[11]; // "EMUNAND9SD "
     u8   fs_type[8];    // "FAT32   "
     u8   reserved4[420];
     u16  magic;         // 0xAA55
@@ -80,7 +80,7 @@ typedef struct {
 
 typedef struct { // this struct is untested!
     u8   jmp[3];        // 0x90 0x00 0xEB
-    char oemname[8];    // "DECRYPT9"
+    char oemname[8];    // "EMUNAND9"
     u16  sct_size;      // 0x0200
     u8   clr_size;      // 0x20 (???) -> 16kB clusters with 512byte sectors
     u16  sct_reserved;  // 0x01
@@ -97,7 +97,7 @@ typedef struct { // this struct is untested!
     u8   head_cur;      // 0x00
     u8   boot_sig;      // 0x29
     u32  vol_id;        // volume id / 0x00
-    u8   vol_label[11]; // "DECRYPT9SD "
+    u8   vol_label[11]; // "EMUNAND9SD "
     u8   fs_type[8];    // "FAT16   "
     u8   reserved4[448];
     u16  magic;         // 0xAA55

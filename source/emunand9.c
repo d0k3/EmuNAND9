@@ -596,11 +596,16 @@ u32 FormatSdCard(u32 param)
     // here the actual formatting takes place
     DeinitFS();
     Debug("Writing new master boot record...");
-    sdmmc_sdcard_writesectors(0, 1, (u8*) mbr_info);
+    if (sdmmc_sdcard_writesectors(0, 1, (u8*) mbr_info) != 0) {
+        Debug("SD card i/o failure");
+        return 1;
+    }
     InitFS();
     Debug("Formatting FAT partition...");
-    if (!PartitionFormat("EMUNAND9SD"))
+    if (!PartitionFormat("EMUNAND9SD")) {
+        Debug("SD format failure");
         return 1;
+    }
     DeinitFS();
     InitFS();
     
