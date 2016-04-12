@@ -6,13 +6,13 @@
 #include "fatfs/sdmmc.h"
 
 #define BUFFER_ADDRESS  ((u8*) 0x21000000)
-#define BUFFER_MAX_SIZE ((u32)(8 * 1024 * 1024))
+#define BUFFER_MAX_SIZE ((u32) (8 * 1024 * 1024))
 #define FCRAM_END       ((u8*) 0x28000000)
 
 #define NAND_SECTOR_SIZE ((u32)0x200)
 #define SECTORS_PER_READ (BUFFER_MAX_SIZE / NAND_SECTOR_SIZE)
 
-#define SD_MINFREE_SECTORS  ((256 * 1024 * 1024) / 0x200)  // have at least 256MB free
+#define SD_MINFREE_SECTORS  ((256 * 1024 * 1024) / 0x200)   // have at least 256MB free
 #define PARTITION_ALIGN     ((4 * 1024 * 1024) / 0x200)     // align at 4MB
 #define MAX_STARTER_SIZE    (16 * 1024 * 1024)              // allow to take over max 16MB boot.3dsx
 
@@ -450,7 +450,8 @@ u32 FormatSdCard(u32 param)
     u8* buffer = (u8*) 0x21000000;
     
     bool setup_emunand = (param & SD_SETUP_EMUNAND);
-    u32 starter_size = (param & SD_USE_STARTER) ? 1 : 0;
+    bool use_starter = (param & SD_USE_STARTER);
+    u32 starter_size = 0;
     
     u32 nand_size_sectors  = (param & SD_SETUP_MINSIZE) ? (NAND_MIN_SIZE / NAND_SECTOR_SIZE) : getMMCDevice(0)->total_size;
     u32 sd_size_sectors    = 0;
@@ -459,50 +460,61 @@ u32 FormatSdCard(u32 param)
     u32 fat_size_sectors   = 0;
     
     // copy starter.bin to memory for autosetup
-    if (starter_size && !CheckFS()) {
+    if (use_starter && !CheckFS()) {
         Debug("File system is corrupt or unknown");
-        Debug("Continuing without starter.bin...");
+        Debug("Continuing without autosetup...");
         Debug("");
-        starter_size = 0;
-    } else if (starter_size && FileOpen("starter.bin")) {
-        Debug("Copying starter.bin to memory...");
-        starter_size = FileGetSize();
-        if (starter_size > ((u32)(FCRAM_END - buffer))) {
-            Debug("File is %ikB, exceeds RAM size", starter_size / 1024);
-            FileClose();
-            return 1;
-        } else if (starter_size > MAX_STARTER_SIZE) {
-            Debug("File is %ikB (recom. max: %ikB)", starter_size / 1024, MAX_STARTER_SIZE / 1024);
-            Debug("This could be too big. Still continue?");
-            Debug("(A to continue, B to cancel)");
+    } else if (FileOpen("starter.bin")) {
+        if (!use_starter) {
+            Debug("File starter.bin found on SD card");
+            Debug("Use this to autosetup?");
+            Debug("(A yes, B no)");
             while (true) {
                 u32 pad_state = InputWait();
-                if (pad_state & BUTTON_A) break;
-                else if (pad_state & BUTTON_B) {
-                    FileClose();
-                    return 2;
+                if (pad_state & (BUTTON_A | BUTTON_B)) {
+                    use_starter = (pad_state & BUTTON_A);
+                    break;
                 }
             }
             Debug("");
         }
-        if (!DebugFileRead(buffer, starter_size, 0)) {
-            FileClose();
-            return 1;
+        if (use_starter) {
+            Debug("Copying starter.bin to memory...");
+            starter_size = FileGetSize();
+            if (!starter_size) {
+                Debug("File is empty, stopping here");
+                FileClose();
+                return 1;
+            } else if (starter_size > ((u32)(FCRAM_END - buffer))) {
+                Debug("File is %ikB, exceeds RAM size", starter_size / 1024);
+                FileClose();
+                return 1;
+            } else if (starter_size > MAX_STARTER_SIZE) {
+                Debug("File is %ikB (recom. max: %ikB)", starter_size / 1024, MAX_STARTER_SIZE / 1024);
+                Debug("This could be too big. Still continue?");
+                Debug("(A to continue, B to cancel)");
+                while (true) {
+                    u32 pad_state = InputWait();
+                    if (pad_state & BUTTON_A) break;
+                    else if (pad_state & BUTTON_B) {
+                        FileClose();
+                        return 2;
+                    }
+                }
+                Debug("");
+            }
+            if (!DebugFileRead(buffer, starter_size, 0)) {
+                FileClose();
+                return 1;
+            }
+            Debug("starter.bin is stored in memory");
+            Debug("");
         }
         FileClose();
-        Debug("starter.bin is stored in memory");
+    } else if (use_starter) {
+        Debug("File starter.bin was not found");
+        Debug("Continuing without autosetup...");
         Debug("");
-    } else if (starter_size) {
-        Debug("File starter.bin was not found!");
-        Debug("You may continue without autosetup");
-        Debug("(A to continue, B to cancel)");
-        while(true) {
-            u32 pad_state = InputWait();
-            if (pad_state & BUTTON_A) break;
-            else if (pad_state & BUTTON_B) return 2;
-        }
-        Debug("");
-        starter_size = 0;
     }
     
     // give the user one last chance to swap the SD card

@@ -24,10 +24,12 @@ MenuInfo menu[] =
         }
     },
     {
-        "SD Format Options", 2,
+        "SD Format Options", 4,
         {
-            { "Format SD...",                 NULL,                   SUBMENU_START + 2 },
-            { "Format SD & setup starter...", NULL,                   SUBMENU_START + 3 }
+            { "Format SD (no EmuNAND)",       &FormatSdCard,          0 },
+            { "Format SD (EmuNAND default)",  &FormatSdCard,          SD_SETUP_EMUNAND },
+            { "Format SD (EmuNAND minsize)",  &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_MINSIZE },
+            { "Format SD (EmuNAND legacy)",   &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
         }
     },
     {
@@ -41,24 +43,6 @@ MenuInfo menu[] =
             { "Backup EmuNAND to file",       &DumpNand,              N_EMUNAND },
             { "Convert EmuNAND -> RedNAND",   &ConvertEmuNand,        N_EMUNAND | N_WREDNAND },
             { "Convert RedNAND -> EmuNAND",   &ConvertEmuNand,        N_EMUNAND }
-        }
-    },
-    {
-        "Format SD...", 4,
-        {
-            { "... without EmuNAND",          &FormatSdCard,          0 },
-            { "... for EmuNAND (default)",    &FormatSdCard,          SD_SETUP_EMUNAND },
-            { "... for EmuNAND (minsize)",    &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_MINSIZE },
-            { "... for EmuNAND (legacy)",     &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
-        }
-    },
-    {
-        "Format SD & setup starter...", 4,
-        {
-            { "... without EmuNAND",          &FormatSdCard,          SD_USE_STARTER },
-            { "... for EmuNAND (default)",    &FormatSdCard,          SD_USE_STARTER | SD_SETUP_EMUNAND },
-            { "... for EmuNAND (minsize)",    &FormatSdCard,          SD_USE_STARTER | SD_SETUP_EMUNAND | SD_SETUP_MINSIZE },
-            { "... for EmuNAND (legacy)",     &FormatSdCard,          SD_USE_STARTER | SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
         }
     },
     {
