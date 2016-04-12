@@ -5,6 +5,7 @@ aka. "The final nail in the coffin of GW software for GW non-owners"_
 ## What can this do?
 Actually, a lot! See this incomplete list:
 * Completely setup a fresh SD card for EmuNAND, including cloning SysNAND to EmuNAND and autosetup of a homebrew starter pack
+* Setup a minimum size RedNAND, saving space on your SD card
 * Clone your SysNAND to your EmuNAND, at any time, without wiping SD data
 * Make backups of your SysNAND and EmuNAND
 * Convert GW type EmuNANDs to RedNAND and vice versa 
@@ -34,6 +35,18 @@ EmuNAND9 can be built to run from a number of entry points, descriptions are bel
 
 If you are a developer and you are building this, you may also just run `make release` to build all files at once. If you are a user, all files are already included in the release archive.
 
+## EmuNAND9 controls
+The most important controls are displayed on screen, here is a list of all:
+* __DOWN__/__UP__ - Navigate menus, select between options.
+* __A__ - Enter submenu or confirm action.
+* __B__ - Depending on location, leave submenu or cancel.
+* __X__ - Make a screenshot (works in menu only).
+* __X + LEFT/RIGHT__ - Batch screenshot all submenus / entries (only on menu)
+* __SELECT__ - Unmount SD card (only on menu).
+* __START (+ LEFT)__ - Reboot (START only) / Poweroff (with LEFT).
+
+There are some features (NAND backup and restore, f.e.), that require the user to choose a filename. In these cases, use the arrow keys to select and A / B to confirm and cancel.
+
 ## EmuNAND9 features description
 See below for a quick descriction of features in EmuNAND9.
 * __Complete EmuNAND Setup__: The recommended option, with the highest comaptibility, for everyone. Works on any CFW and/or hardware. This will format your SD card, clone your SysNAND to EmuNAND and setup a base starter pack (see below). _The contents of your SD card & your EmuNAND (if existing) will be wiped_, so keep backups. You are given the possibility to switch the SD card after starting this, just in case you want to format a different SD card than the one EmuNAND9 is running from.
@@ -57,7 +70,7 @@ Read more about the [RedNAND / GW EmuNAND difference here](https://gbatemp.net/t
 Just doing the conversion (in EmuNAND Manager Options) will not save any space on your SD card.
 
 ## Starter pack contents
-As a new feature, EmuNAND9 contains the ability to transfer a starter pack to your newly formatted SD card. The starter pack is in the file called 'starter.bin'. This file can be either a boot.3dsx or a Launcher.dat, but you have to rename it to 'starter.bin' for it work. EmuNAND9 will detect the type of 'starter.bin' automatically and name it accordingly when transfering to the formatted SD card. The maximum size of 'starter.bin' is 16MB.
+As a new feature, EmuNAND9 contains the ability to transfer a starter pack to your newly formatted SD card. The starter pack is in the file called 'starter.bin'. This file can be either a boot.3dsx or a Launcher.dat, but you have to rename it to 'starter.bin' for it work. EmuNAND9 will detect the type of 'starter.bin' automatically and name it accordingly when transferring to the formatted SD card. The maximum size of 'starter.bin' is 16MB.
 
 The 'starter.bin' included with EmuNAND9 is an extended version of smealums homebrew starter pack (from https://smealum.github.io/ninjhax2/). It was converted to a 3DS compatible self extracting ZIP archive using ZIP3DSFX (https://github.com/d0k3/ZIP3DSFX). ZIP3DSFX doesn't have a graphical user interface at the moment, but you can use the simple batch script included in the release archive to convert any ZIP archive to your personal .3DSX self extracting ZIP archive. You can also open the starter.bin in any ZIP archiver.
 
@@ -83,6 +96,6 @@ The starter.bin contains the following homebrew software:
 ## Credits
 * Archshift for the basic code behind this
 * Cha(N), Kane49, and all other FatFS contributors for FatFS
-* Normmatt for `sdmc.s` as well as project infrastructure (Makefile, linker setup, etc)
+* Normmatt for `sdmmc.c` as well as the project infrastructure (Makefile, linker setup, etc)
 * Shadowtrance, Datalogger and countless others for helping me test and develop this
 * The fine folks on freenode #Cakey
