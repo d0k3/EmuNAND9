@@ -48,7 +48,7 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
         DrawStringF(menublock_x0, menublock_y1 +  0, top_screen, "==============================");
         DrawStringF(menublock_x0, menublock_y1 + 10, top_screen, (subMenu) ? "A: Choose  B: Return" : "A: Choose");
         DrawStringF(menublock_x0, menublock_y1 + 20, top_screen, "SELECT: Unmount SD");
-        DrawStringF(menublock_x0, menublock_y1 + 30, top_screen, "START:  Reboot");
+        DrawStringF(menublock_x0, menublock_y1 + 30, top_screen, "START:  Reboot / [+\x1B] Poweroff");
         if (CheckFS()) {
             DrawStringF(menublock_x1, SCREEN_HEIGHT - 20, top_screen, "SD storage: %lluMB / %lluMB", RemainingStorageSpace() / (1024*1024), TotalStorageSpace() / (1024*1024));
         } else {
