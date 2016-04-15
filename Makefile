@@ -171,7 +171,7 @@ release:
 	@-[ ! -n "$(strip $(THEME))" ] || (([ -d $(STARTER)/extstarterpack/$(THEME) ] || mkdir $(STARTER)/extstarterpack/$(THEME)) && cp $(CURDIR)/resources/$(THEME)/*.bin $(STARTER)/extstarterpack/$(THEME))
 	@-make --no-print-directory -C $(STARTER) -f $(STARTER)/Makefile
 	@-cp $(STARTER)/output/starter.bin $(RELEASE)/EmuNAND9
-	@-cp $(STARTER)/output/drop_zip_here.bat $(RELEASE)/starterGen
+	@-cp $(STARTER)/output/drop_zip_here.* $(RELEASE)/starterGen
 	@-cp $(STARTER)/output/ZIP3DSFX.3dsx $(RELEASE)/starterGen
 	@-7z a $(RELEASE)/$(TARGET)-`date +'%Y%m%d-%H%M%S'`.zip $(RELEASE)/*
 
