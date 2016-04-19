@@ -1,6 +1,11 @@
 WGEN := $(CURDIR)/simplegen.bat
 UGEN := $(CURDIR)/simplegen.sh
-ZIP  := $(CURDIR)/7za.exe a -xr!.*
+ZIP  :=
+ifeq ($(OS),Windows_NT)
+ZIP  += $(CURDIR)/7za.exe a -xr!.*
+else
+ZIP  += $(CURDIR)/7za a -xr!.*
+endif
 
 export OUTPUT_D	:= $(CURDIR)/output
 export ZIP3DSFX := $(CURDIR)/ZIP3DSFX
