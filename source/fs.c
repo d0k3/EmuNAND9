@@ -2,6 +2,7 @@
 #include "draw.h"
 
 #include "fatfs/ff.h"
+#include "fatfs/sdmmc.h"
 
 static bool fs_ok = false;
 static FATFS fs;
@@ -240,7 +241,9 @@ bool GetFileList(const char* path, char* list, int lsize, bool recursive)
 
 bool PartitionFormat(const char* label)
 {
-    bool ret = (f_mkfs("0:", 0, 0) == FR_OK);
+    UINT p_size_gb = ((uint64_t) getMMCDevice(1)->total_size * 512) / (1000 * 1000 * 1000);
+    UINT c_size = (p_size_gb < 4) ? 0 : (p_size_gb < 15) ? 32768 : 65536;
+    bool ret = (f_mkfs("0:", 0, c_size) == FR_OK);
     if (ret && label) {
         char label0[16];
         snprintf(label0, 16, "0:%-11.11s", label);
