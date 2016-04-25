@@ -163,7 +163,7 @@ release:
 	@-cp $(OUTPUT).nds $(RELEASE)
 	@-cp $(OUTPUT).3dsx $(RELEASE)/3DS/$(TARGET)
 	@-cp $(OUTPUT).smdh $(RELEASE)/3DS/$(TARGET)
-	@-cp Readme.md $(RELEASE)
+	@-cp README.md $(RELEASE)
 	@[ -d $(RELEASE)/starterGen ] || mkdir -p $(RELEASE)/starterGen
 	@-[ "$(TARGET)" != "EmuNAND9" ] || cp $(OUTPUT).bin $(STARTER)/extstarterpack/arm9payloads
 	@-[ "$(TARGET)" = "EmuNAND9" ] || (([ -d $(STARTER)/extstarterpack/3DS/$(TARGET) ] || mkdir $(STARTER)/extstarterpack/3DS/$(TARGET)) && cp $(RELEASE)/3DS/$(TARGET)/*.* $(STARTER)/extstarterpack/3DS/$(TARGET))
