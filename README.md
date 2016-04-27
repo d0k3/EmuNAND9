@@ -28,7 +28,7 @@ As written above, this includes a number of safety measures to make it as idiot 
 ## How to run this / entry points
 EmuNAND9 can be built to run from a number of entry points, descriptions are below. Note that you need to be on or below 3DS firmware version v9.2 or have ARM9loaderhax installed for any of these to work.
 * __Gateway Browser Exploit__: Copy `Launcher.dat` to your SD card root and run this via http://go.gateway-3ds.com/ from your 3DS browser. Build this with `make gateway`.
-* __A9LH & Brahma__: Copy `EmuNAND9.bin` to somewhere on your SD card and run it via either [Brahma](https://github.com/delebile/Brahma2) or [ARM9loaderhax](https://github.com/Plailect/Guide/wiki). Brahma derivatives / loaders such as [BrahmaLoader](https://gbatemp.net/threads/release-easily-load-payloads-in-hb-launcher-via-brahma-2-mod.402857/), [BootCTR](https://gbatemp.net/threads/re-release-bootctr-a-simple-boot-manager-for-3ds.401630/) and [CTR Boot Manager](https://gbatemp.net/threads/ctrbootmanager-3ds-boot-manager-loader-homemenuhax.398383/) will also work with this. Build this with `make bootstrap`.
+* __A9LH & Brahma__: Copy `EmuNAND9.bin` to somewhere on your SD card and run it via either [Brahma](https://github.com/delebile/Brahma2) or [arm9loaderhax](https://github.com/Plailect/Guide/wiki). Brahma derivatives / loaders (such as [BrahmaLoader](https://gbatemp.net/threads/release-easily-load-payloads-in-hb-launcher-via-brahma-2-mod.402857/), [BootCTR](https://gbatemp.net/threads/re-release-bootctr-a-simple-boot-manager-for-3ds.401630/) and [CTR Boot Manager](https://gbatemp.net/threads/ctrbootmanager-3ds-boot-manager-loader-homemenuhax.398383/)) and A9LH chainloaders (such as [Luma3DS](https://github.com/AuroraWright/Luma3DS) and [BootCTR9](https://github.com/hartmannaf/BootCtr9)) will work with this as well. Build this with `make a9lh`.
 * __Homebrew Launcher__: Copy `EmuNAND9.3dsx` & `EmuNAND9.smdh` into `/3DS/EmuNAND9` on your SD card. Run this via [Smealums Homebrew Launcher](http://smealum.github.io/3ds/), [Mashers Grid Launcher](https://gbatemp.net/threads/release-homebrew-launcher-with-grid-layout.397527/) or any other compatible software. Build this with `make brahma`.
 * __CakeHax Browser__: Copy `EmuNAND9.dat` to the root of your SD card. You can then run it via http://dukesrg.github.io/?EmuNAND9.dat from your 3DS browser. Build this via `make cakehax`.
 * __CakeHax MSET__: Copy `EmuNAND9.dat` to the root of your SD card and `EmuNAND9.nds` to anywhere on the SD card. You can then run it either via MSET and EmuNAND9.nds. Build this via `make cakerop`.
@@ -89,9 +89,11 @@ The starter.bin contains the following homebrew software:
 * Decrypt9 by Archshift & d0k3
 * EmuNAND9 by d0k3
 * GodMode9 by d0k3
-* ReiNAND CFW by reisyukaku (without the evil firmware.bin file)
+* Luma3DS by AuroraWright
+* ReiNAND CFW by reisyukaku
 * CakesFW by mid-kid (you need to get some files yourself)
 * MiniPasta by zoogie
+* ... and more!
 
 ## Credits
 * Archshift for the basic code behind this

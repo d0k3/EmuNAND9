@@ -1,4 +1,4 @@
-#ifdef EXEC_BOOTSTRAP
+#ifdef EXEC_A9LH
 
 .section .text.start
 .align 4
@@ -60,4 +60,4 @@ _start:
 .die:
     b .die
 
-#endif // EXEC_BOOTSTRAP
+#endif // EXEC_A9LH
