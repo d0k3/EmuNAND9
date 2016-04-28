@@ -20,7 +20,7 @@ export TARGET	:=	EmuNAND9
 BUILD		:=	build
 SOURCES		:=	source source/fatfs source/abstraction
 DATA		:=	data
-INCLUDES	:=	include source source/fatfs
+INCLUDES	:=	source source/fatfs
 
 #---------------------------------------------------------------------------------
 # THEME: if set to anything, name of the themes file folder inside resources
@@ -32,7 +32,7 @@ THEME	:=
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork -flto
 
-CFLAGS	:=	-g -Wall -O2 -flto\
+CFLAGS	:=	-g -Wall -Wextra -Wpedantic -pedantic -O2\
 			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 			-ffast-math -std=c99\
 			$(ARCH)
