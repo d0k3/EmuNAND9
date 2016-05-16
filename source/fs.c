@@ -19,12 +19,7 @@ PARTITION VolToPart[] = {
 
 bool InitFS()
 {
-    #ifndef EXEC_GATEWAY
-    // TODO: Magic?
-    *(u32*)0x10000020 = 0;
-    *(u32*)0x10000020 = 0x340;
-    #endif
-    bool ret = fs_ok = (f_mount(&fs, "0:", 1) == FR_OK);
+    bool ret = (f_mount(&fs, "0:", 1) == FR_OK);
     #ifdef WORK_DIR
     if (ret)
         f_chdir(WORK_DIR);
@@ -49,7 +44,9 @@ bool FileOpen(const char* path)
     if (!fs_ok)
         return false;
     unsigned flags = FA_READ | FA_WRITE | FA_OPEN_EXISTING;
-    bool ret = (f_open(&file, path, flags) == FR_OK);
+    unsigned flags_ro = FA_READ | FA_OPEN_EXISTING;
+    bool ret = (f_open(&file, path, flags) == FR_OK) ||
+        (f_open(&file, path, flags_ro) == FR_OK);
     f_lseek(&file, 0);
     f_sync(&file);
     return ret;
