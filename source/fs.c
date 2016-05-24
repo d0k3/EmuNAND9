@@ -19,7 +19,7 @@ PARTITION VolToPart[] = {
 
 bool InitFS()
 {
-    bool ret = (f_mount(&fs, "0:", 1) == FR_OK);
+    bool ret = fs_ok = (f_mount(&fs, "0:", 1) == FR_OK);
     #ifdef WORK_DIR
     if (ret)
         f_chdir(WORK_DIR);
