@@ -2,6 +2,7 @@
 #include "draw.h"
 #include "hid.h"
 #include "platform.h"
+#include "hashfile.h"
 #include "emunand9.h"
 #include "fatfs/sdmmc.h"
 
@@ -306,6 +307,7 @@ u32 DumpNand(u32 param)
     if (!DebugFileCreate(filename, true))
         return 1;
 
+    sha_init(SHA256_MODE);
     u32 n_sectors = nand_size / NAND_SECTOR_SIZE;
     for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
         u32 read_sectors = min(SECTORS_PER_READ, (n_sectors - i));
@@ -316,10 +318,20 @@ u32 DumpNand(u32 param)
             result = 1;
             break;
         }
+        sha_update(buffer, NAND_SECTOR_SIZE * read_sectors);
     }
 
     ShowProgress(0, 0);
     FileClose();
+    
+    if (result == 0) {
+        char hashname[64];
+        u8 shasum[32];
+        sha_get(shasum);
+        Debug("NAND dump SHA256: %08X...", getbe32(shasum));
+        snprintf(hashname, 64, "%s.sha", filename);
+        Debug("Store to %s: %s", hashname, (FileDumpData(hashname, shasum, 32) == 32) ? "ok" : "failed");
+    }
 
     return result;
 }
@@ -364,6 +376,7 @@ u32 InjectNand(u32 param)
                     return 2;
                 }
             }
+            Debug("");
         }
         write_dest = WR_EMUNAND_REDNAND;
         nand_size = NAND_MIN_SIZE;
@@ -401,14 +414,14 @@ u32 InjectNand(u32 param)
             FileClose();
             return 1;
         }
+        FileClose();
+        
         if (!IS_NAND_HEADER(buffer)) {
-            FileClose();
             Debug("Not a proper NAND dump!");
             return 1;
         }
         if (file_size < NAND_MIN_SIZE) {
             Debug("NAND dump misses data!");
-            FileClose();
             return 1;
         } else if ((file_size != nand_full_size) && (file_size != NAND_MIN_SIZE)) {
             Debug("NAND dump is %s than NAND memory chip.", (file_size < nand_full_size) ? "smaller" : "bigger");
@@ -419,13 +432,25 @@ u32 InjectNand(u32 param)
                 u32 pad_state = InputWait();
                 if (pad_state & BUTTON_A) break;
                 else if (pad_state & BUTTON_B) {
-                    FileClose();
                     return 2;
                 }
             }
             if (file_size < nand_size) // can only write as much sectors as there are
                 n_sectors = file_size / NAND_SECTOR_SIZE;
+            Debug("");
         }
+        
+        Debug("Verifying NAND dump via .SHA...");
+        u32 hash_res = HashVerifyFile(filename);
+        if (hash_res == HASH_FAILED) {
+            Debug("Failed, file is corrupt!");
+            return 1;
+        }
+        Debug((hash_res == HASH_VERIFIED) ? "Verification passed" : ".SHA not found, skipped");
+        Debug("");
+        
+        if (!FileOpen(filename))
+            return 1; // this has been checked enough by now
         
         Debug("Injecting file to %sNAND (%uMB)...", (write_dest == WR_SYSNAND) ? "Sys" : (write_dest == WR_EMUNAND_GATEWAY) ? "Emu" : "Red", nand_size / (1024 * 1024));
         for (u32 i = 0; i < n_sectors; i += SECTORS_PER_READ) {
