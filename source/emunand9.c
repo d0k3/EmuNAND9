@@ -296,6 +296,9 @@ u32 DumpNand(u32 param)
         nand_size = NAND_MIN_SIZE;
     
     Debug("Dumping %sNAND (%uMB) to file...", (use_emunand) ? "Emu" : "Sys", nand_size / (1024 * 1024));
+    
+    if (!DebugCheckFreeSpace(nand_size))
+        return 1;
 
     u32 fn_state = OutputFileNameSelector(filename, "NAND", "bin", use_emunand);
     if (fn_state != 0)
