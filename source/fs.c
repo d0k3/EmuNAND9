@@ -39,6 +39,18 @@ bool CheckFS()
     return fs_ok;
 }
 
+bool DebugCheckFreeSpace(size_t required)
+{
+	if (!fs_ok)
+        return false;
+    if (required > RemainingStorageSpace()) {
+        Debug("Not enough space left on SD card");
+        return false;
+    }
+    
+    return true;
+}
+
 bool FileOpen(const char* path)
 {
     if (!fs_ok)
@@ -116,7 +128,7 @@ bool DebugFileWrite(void* buf, size_t size, size_t foffset)
 {
     size_t bytesWritten = FileWrite(buf, size, foffset);
     if(bytesWritten != size) {
-        Debug("ERROR, SD card may be full!");
+        Debug("SD failure or SD full");
         return false;
     }
     
@@ -234,6 +246,43 @@ bool GetFileList(const char* path, char* list, int lsize, bool recursive)
     char fpath[256];
     strncpy(fpath, path, 256);
     return GetFileListWorker(&list, &lsize, fpath, 256, recursive);
+}
+
+size_t FileGetData(const char* path, void* buf, size_t size, size_t foffset)
+{
+    unsigned flags = FA_READ | FA_OPEN_EXISTING;
+    FIL tmp_file;
+    if (!fs_ok)
+        return 0;
+    if (f_open(&tmp_file, path, flags) == FR_OK) {
+        UINT bytes_read = 0;
+        bool res = false;
+        f_lseek(&tmp_file, foffset);
+        f_sync(&tmp_file);
+        res = (f_read(&tmp_file, buf, size, &bytes_read) == FR_OK);
+        f_close(&tmp_file);
+        return (res) ? bytes_read : 0;
+    }
+    
+    return 0;
+}
+
+size_t FileDumpData(const char* path, void* buf, size_t size)
+{
+    unsigned flags = FA_WRITE | FA_CREATE_ALWAYS;
+    FIL tmp_file;
+    UINT bytes_written = 0;;
+    bool res = false;
+    if (!fs_ok)
+        return 0;
+    if (f_open(&tmp_file, path, flags) != FR_OK)
+        return 0;
+    f_lseek(&tmp_file, 0);
+    f_sync(&tmp_file);
+    res = (f_write(&tmp_file, buf, size, &bytes_written) == FR_OK);
+    f_close(&tmp_file);
+    
+    return (res) ? bytes_written : 0;
 }
 
 bool PartitionFormat(const char* label)

@@ -6,6 +6,9 @@ bool InitFS();
 void DeinitFS();
 bool CheckFS();
 
+/** Checks if there is enough space free on the SD card **/
+bool DebugCheckFreeSpace(size_t required);
+
 /** Opens existing files */
 bool FileOpen(const char* path);
 bool DebugFileOpen(const char* path);
@@ -41,6 +44,12 @@ bool DirRead(char* fname, int fsize);
 /** Get list of files under a given path **/
 bool GetFileList(const char* path, char* list, int lsize, bool recursive);
 
+/** Quickly opens a secondary file, gets some data, and closes it again **/
+size_t FileGetData(const char* path, void* buf, size_t size, size_t foffset);
+
+/** Quickly opens a secondary file, dumps some data, and closes it again **/
+size_t FileDumpData(const char* path, void* buf, size_t size);
+
 /** Formats the first (and only) partition using label as name **/
 bool PartitionFormat(const char* label);
 
@@ -51,5 +60,4 @@ uint64_t RemainingStorageSpace();
 uint64_t TotalStorageSpace();
 
 void FileClose();
-
 void DirClose();
