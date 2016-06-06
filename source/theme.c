@@ -55,4 +55,21 @@ void LoadThemeGfxLogo(void) {
     #endif
     #endif
 }
+
+#ifdef ALT_PROGRESS
+void ShowProgress(u64 current, u64 total) {
+    const u32 nSymbols = PRG_BARWIDTH / 8;
+    char progStr[nSymbols + 1];
+    
+    memset(progStr, (int) ' ', nSymbols);
+    if (total > 0) {
+        for (u32 s = 0; s < ((nSymbols * current) / total); s++)
+            progStr[s] = '\xDB';
+    }
+    progStr[nSymbols] = '\0';
+    
+    DrawString(BOT_SCREEN0, progStr, PRG_START_X, PRG_START_Y, PRG_COLOR_FONT, PRG_COLOR_BG);
+    DrawString(BOT_SCREEN1, progStr, PRG_START_X, PRG_START_Y, PRG_COLOR_FONT, PRG_COLOR_BG);
+}
+#endif
 #endif
