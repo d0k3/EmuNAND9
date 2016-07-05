@@ -33,6 +33,3 @@
 #define getle64(d) (*((u64*) (d)))
 #define align(v,a) \
     (((v) % (a)) ? ((v) + (a) - ((v) % (a))) : (v))
-    
-// work files / directories
-#define WORK_DIR "/EmuNAND9"

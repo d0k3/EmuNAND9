@@ -2,9 +2,14 @@
 
 #include "common.h"
 
+#define WORK_DIRS   "/files9", "/EmuNAND9"
+
 bool InitFS();
 void DeinitFS();
 bool CheckFS();
+
+/** Work directory handling **/
+const char* GetWorkDir();
 
 /** Checks if there is enough space free on the SD card **/
 bool DebugCheckFreeSpace(size_t required);

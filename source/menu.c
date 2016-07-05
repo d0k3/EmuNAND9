@@ -59,18 +59,13 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
             (emunand_state == RES_EMUNAND_NOT_READY) ? "SD not ready" :
             (emunand_state == RES_EMUNAND_GATEWAY) ? "GW EmuNAND" : 
             (emunand_state == RES_EMUNAND_REDNAND) ? "RedNAND" : "SD is ready" );
-        #ifdef WORK_DIR
-        if (DirOpen(WORK_DIR)) {
-            DrawStringF(menublock_x1, SCREEN_HEIGHT - 40, top_screen, "Work directory: %s", WORK_DIR);
-            DirClose();
-        }
-        #endif
+        DrawStringF(menublock_x1, SCREEN_HEIGHT - 40, top_screen, "Work directory: %s", GetWorkDir());
     }
     
     if (!top_screen) {
         DrawStringF(10, 10, true, "Selected: %-*.*s", 32, 32, currMenu->entries[index].name);
     } else {
-        DrawStringF(32, 30, false, "*** EmuNAND9 ***\n \nTo setup a fresh SD with EmuNAND,\nchoose 'Complete EmuNAND Setup'.\nYou will be asked to switch your\nSD card during the process.\nCheck the other menu entries for\nmore options.\n \nCredits:\n* Archshift (for Decrypt9)\n* patois (for Brahma)\n* mid-kid (for CakeHax)\n* Datalogger (for testing)\n* Shadowtrance (for testing)\n* everyone else who helped me!");
+        DrawStringF(32, 30, false, "*** EmuNAND9 ***\n \nTo setup a fresh SD with EmuNAND,\nchoose 'Complete RedNAND Setup'.\nYou will be asked to switch your\nSD card during the process.\nCheck the other menu entries for\nmore options.\n \nCredits:\n* Archshift (for Decrypt9)\n* patois (for Brahma)\n* mid-kid (for CakeHax)\n* Datalogger (for testing)\n* Shadowtrance (for testing)\n* everyone else who helped me!");
     }
         
     for (u32 i = 0; i < currMenu->n_entries; i++) { // draw menu entries / selection []

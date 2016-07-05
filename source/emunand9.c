@@ -221,7 +221,7 @@ static inline u32 InputFileNameSelector(char* filename, const char* basename, ch
     // pass #2 -> root dir
     for (u32 i = 0; i < 2; i++) {
         // get the file list - try work directory first
-        if (!GetFileList((i) ? "/" : WORK_DIR, fnlist, 0x80000, false))
+        if (!GetFileList((i) ? "/" : GetWorkDir(), fnlist, 0x80000, false))
             continue;
         
         // parse the file names list for usable entries
@@ -658,11 +658,10 @@ u32 FormatSdCard(u32 param)
     }
     
     // try creating the working directory
-    #ifdef WORK_DIR
-    DirMake(WORK_DIR);
+    const char* work_dirs[] = { WORK_DIRS };
+    DirMake(work_dirs[0]);
     DeinitFS();
     InitFS();
-    #endif
     
     // setup starter.bin
     if (starter_size) {

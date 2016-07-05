@@ -20,10 +20,8 @@ PARTITION VolToPart[] = {
 bool InitFS()
 {
     bool ret = fs_ok = (f_mount(&fs, "0:", 1) == FR_OK);
-    #ifdef WORK_DIR
     if (ret)
-        f_chdir(WORK_DIR);
-    #endif
+        f_chdir(GetWorkDir());
 
     return ret;
 }
@@ -37,6 +35,25 @@ void DeinitFS()
 bool CheckFS()
 {
     return fs_ok;
+}
+
+const char* GetWorkDir()
+{
+    const char* root = "/";
+    const char* work_dirs[] = { WORK_DIRS };
+    u32 n_dirs = sizeof(work_dirs) / sizeof(char*);
+    
+    if (!fs_ok)
+        return NULL;
+    
+    u32 i;
+    for (i = 0; i < n_dirs; i++) {
+        FILINFO fno = { .lfname = NULL };
+        if ((f_stat(work_dirs[i], &fno) == FR_OK) && (fno.fattrib & AM_DIR))
+            break;
+    }
+    
+    return ((i >= n_dirs) ? root : work_dirs[i]);
 }
 
 bool DebugCheckFreeSpace(size_t required)
