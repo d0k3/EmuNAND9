@@ -34,8 +34,8 @@ DSTATUS disk_initialize (
 	BYTE pdrv				/* Physical drive nmuber to identify the drive */
 )
 {
-	if (!sdmmc_sdcard_init())
-        return RES_PARERR;
+	if (sdmmc_sdcard_init() != 0)
+        return STA_NODISK|STA_NOINIT;
 	return RES_OK;
 }
 
@@ -101,13 +101,13 @@ DRESULT disk_ioctl (
 {
     switch (cmd) {
         case GET_SECTOR_SIZE:
-            *((DWORD*) buff) = 0x200; // 512 byte sectors
+            *((DWORD*) buff) = 0x200;
             return RES_OK;
         case GET_SECTOR_COUNT:
             *((DWORD*) buff) = getMMCDevice(1)->total_size;
             return RES_OK;
         case GET_BLOCK_SIZE:
-            *((DWORD*) buff) = 0x2000; // 0x200 * 0x2000 = 4MB blocks
+            *((DWORD*) buff) = 0x2000;
             return RES_OK;
         case CTRL_SYNC:
             // nothing to do here - the disk_write function handles that
