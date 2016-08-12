@@ -156,7 +156,7 @@ release:
 	@[ -d $(RELEASE) ] || mkdir -p $(RELEASE)
 	@[ -d $(RELEASE)/3DS ] || mkdir -p $(RELEASE)/3DS
 	@[ -d $(RELEASE)/3DS/$(TARGET) ] || mkdir -p $(RELEASE)/3DS/$(TARGET)
-	@[ -d $(RELEASE)/EmuNAND9 ] || mkdir -p $(RELEASE)/EmuNAND9
+	@[ -d $(RELEASE)/files9 ] || mkdir -p $(RELEASE)/files9
 	@cp $(OUTPUT_D)/Launcher.dat $(RELEASE)
 	@-cp $(OUTPUT).bin $(RELEASE)
 	@-cp $(OUTPUT).dat $(RELEASE)
@@ -170,7 +170,7 @@ release:
 	@-[ ! -n "$(strip $(THEME))" ] || (mkdir $(RELEASE)/$(THEME) && cp $(CURDIR)/resources/$(THEME)/*.bin $(RELEASE)/$(THEME))
 	@-[ ! -n "$(strip $(THEME))" ] || (([ -d $(STARTER)/extstarterpack/$(THEME) ] || mkdir $(STARTER)/extstarterpack/$(THEME)) && cp $(CURDIR)/resources/$(THEME)/*.bin $(STARTER)/extstarterpack/$(THEME))
 	@-make --no-print-directory -C $(STARTER) -f $(STARTER)/Makefile
-	@-cp $(STARTER)/output/starter.bin $(RELEASE)/EmuNAND9
+	@-cp $(STARTER)/output/starter.bin $(RELEASE)/files9
 	@-cp $(STARTER)/output/drop_zip_here.* $(RELEASE)/starterGen
 	@-cp $(STARTER)/output/ZIP3DSFX.3dsx $(RELEASE)/starterGen
 	@-7z a $(RELEASE)/$(TARGET)-`date +'%Y%m%d-%H%M%S'`.zip $(RELEASE)/*
