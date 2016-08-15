@@ -73,6 +73,7 @@ int main()
     u32 menu_exit = ProcessMenu(menu, SUBMENU_START);
     
     DeinitFS();
+    ClearScreenFull(true, true);
     (menu_exit == MENU_EXIT_REBOOT) ? Reboot() : PowerOff();
     return 0;
 }
