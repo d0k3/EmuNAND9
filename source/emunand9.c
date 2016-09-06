@@ -475,6 +475,7 @@ u32 FormatSdCard(u32 param)
 {
     MbrInfo* mbr_info = (MbrInfo*) 0x20316000;
     MbrPartitionInfo* part_info = mbr_info->partitions;
+    u8* zeroes = (u8*) 0x20316200;
     u8* buffer = (u8*) 0x21000000;
     
     bool setup_emunand = (param & SD_SETUP_EMUNAND);
@@ -637,6 +638,14 @@ u32 FormatSdCard(u32 param)
     DeinitFS();
     Debug("Writing new master boot record...");
     if (sdmmc_sdcard_writesectors(0, 1, (u8*) mbr_info) != 0) {
+        Debug("SD card i/o failure");
+        return 1;
+    }
+    Debug("Wiping earlier NCSD EmuNAND magic...");
+    memset(zeroes, 0x00, 0x200);
+    if ((!setup_emunand && (sdmmc_sdcard_writesectors(1, 1, zeroes) != 0)) ||
+        ((sd_size_sectors > getMMCDevice(0)->total_size) && (fat_offset_sectors <= getMMCDevice(0)->total_size) &&
+        (sdmmc_sdcard_writesectors(getMMCDevice(0)->total_size, 1, zeroes) != 0))) {
         Debug("SD card i/o failure");
         return 1;
     }
