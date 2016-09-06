@@ -305,7 +305,7 @@ size_t FileDumpData(const char* path, void* buf, size_t size)
 bool PartitionFormat(const char* label)
 {
     UINT p_size_gb = ((uint64_t) getMMCDevice(1)->total_size * 512) / (1000 * 1000 * 1000);
-    UINT c_size = (p_size_gb < 4) ? 0 : (p_size_gb < 15) ? 32768 : 65536;
+    UINT c_size = (p_size_gb < 4) ? 0 : 32768;
     bool ret = (f_mkfs("0:", 0, c_size) == FR_OK);
     if (ret && label) {
         char label0[16];
