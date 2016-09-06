@@ -10,6 +10,11 @@
 #define SCREEN_HEIGHT 240
 #define SCREEN_WIDTH_TOP 400
 #define SCREEN_WIDTH_BOT 320
+#ifdef FONT_6X10 // special font width
+#define FONT_WIDTH_EXT 6
+#else
+#define FONT_WIDTH_EXT 8
+#endif
 
 #define RGB(r,g,b) (r<<24|b<<16|g<<8|r)
 
@@ -21,6 +26,23 @@
 #define COLOR_GREY          RGB(0x77, 0x77, 0x77)
 #define COLOR_PURPLE        RGB(0x66, 0x00, 0xFF)
 #define COLOR_TRANSPARENT   RGB(0xFF, 0x00, 0xEF) // otherwise known as 'super fuchsia'
+
+#ifndef USE_THEME
+#define STD_COLOR_BG   COLOR_BLACK
+#define STD_COLOR_FONT COLOR_WHITE
+
+#define DBG_COLOR_BG   COLOR_BLACK
+#define DBG_COLOR_FONT COLOR_WHITE
+
+#define DBG_START_Y 10
+#define DBG_END_Y   (SCREEN_HEIGHT - 10)
+#define DBG_START_X 10
+#define DBG_END_X   (SCREEN_WIDTH_TOP - 10)
+#define DBG_STEP_Y  10
+#endif
+
+#define DBG_N_CHARS_Y ((DBG_END_Y - DBG_START_Y) / DBG_STEP_Y)
+#define DBG_N_CHARS_X (((DBG_END_X - DBG_START_X) / FONT_WIDTH) + 1)
 
 #ifdef EXEC_GATEWAY
 	#define TOP_SCREEN0 (u8*)(*(u32*)((uint32_t)0x080FFFC0 + 4 * (*(u32*)0x080FFFD8 & 1)))

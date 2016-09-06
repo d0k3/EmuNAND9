@@ -12,22 +12,7 @@
 #include "fs.h"
 #ifdef USE_THEME
 #include "theme.h"
-#else
-#define STD_COLOR_BG   COLOR_BLACK
-#define STD_COLOR_FONT COLOR_WHITE
-
-#define DBG_COLOR_BG   COLOR_BLACK
-#define DBG_COLOR_FONT COLOR_WHITE
-
-#define DBG_START_Y 10
-#define DBG_END_Y   (SCREEN_HEIGHT - 10)
-#define DBG_START_X 10
-#define DBG_END_X   (SCREEN_WIDTH_TOP - 10)
-#define DBG_STEP_Y  10
 #endif
-
-#define DBG_N_CHARS_Y   ((DBG_END_Y - DBG_START_Y) / DBG_STEP_Y)
-#define DBG_N_CHARS_X   (((DBG_END_X - DBG_START_X) / 8) + 1)
 
 static char debugstr[DBG_N_CHARS_X * DBG_N_CHARS_Y] = { 0 };
 
@@ -55,13 +40,13 @@ void ClearScreenFull(bool clear_top, bool clear_bottom)
 
 void DrawCharacter(u8* screen, int character, int x, int y, int color, int bgcolor)
 {
-    for (int yy = 0; yy < 8; yy++) {
+    for (int yy = 0; yy < FONT_HEIGHT; yy++) {
         int xDisplacement = (x * BYTES_PER_PIXEL * SCREEN_HEIGHT);
         int yDisplacement = ((SCREEN_HEIGHT - (y + yy) - 1) * BYTES_PER_PIXEL);
         u8* screenPos = screen + xDisplacement + yDisplacement;
 
-        u8 charPos = font[character * 8 + yy];
-        for (int xx = 7; xx >= 0; xx--) {
+        u8 charPos = font[character * FONT_HEIGHT + yy];
+        for (int xx = 7; xx >= (8 - FONT_WIDTH); xx--) {
             if ((charPos >> xx) & 1) {
                 *(screenPos + 0) = color >> 16;  // B
                 *(screenPos + 1) = color >> 8;   // G
@@ -79,7 +64,7 @@ void DrawCharacter(u8* screen, int character, int x, int y, int color, int bgcol
 void DrawString(u8* screen, const char *str, int x, int y, int color, int bgcolor)
 {
     for (size_t i = 0; i < strlen(str); i++)
-        DrawCharacter(screen, str[i], x + i * 8, y, color, bgcolor);
+        DrawCharacter(screen, str[i], x + i * FONT_WIDTH, y, color, bgcolor);
 }
 
 void DrawStringF(int x, int y, bool use_top, const char *format, ...)

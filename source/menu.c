@@ -36,8 +36,8 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
 {
     bool top_screen = true;
     u32 emunand_state = CheckEmuNand();
-    u32 menublock_x0 = (top_screen) ? 76 : 36;
-    u32 menublock_x1 = (top_screen) ? 76 : 36;
+    u32 menublock_x0 = (((top_screen) ? SCREEN_WIDTH_TOP : SCREEN_WIDTH_BOT) - 30 * FONT_WIDTH_EXT) / 2;
+    u32 menublock_x1 = menublock_x0 - FONT_WIDTH_EXT;
     u32 menublock_y0 = 50;
     u32 menublock_y1 = menublock_y0 + currMenu->n_entries * 10;
     
@@ -65,7 +65,7 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
     if (!top_screen) {
         DrawStringF(10, 10, true, "Selected: %-*.*s", 32, 32, currMenu->entries[index].name);
     } else {
-        DrawStringF(32, 30, false, "*** EmuNAND9 ***\n \nTo setup a fresh SD with EmuNAND,\nchoose 'Complete RedNAND Setup'.\nYou will be asked to switch your\nSD card during the process.\nCheck the other menu entries for\nmore options.\n \nCredits:\n* Archshift (for Decrypt9)\n* patois (for Brahma)\n* mid-kid (for CakeHax)\n* Datalogger (for testing)\n* Shadowtrance (for testing)\n* everyone else who helped me!");
+        DrawStringF((SCREEN_WIDTH_BOT - 32 * FONT_WIDTH_EXT) / 2, 30, false, "*** EmuNAND9 ***\n \nTo setup a fresh SD with EmuNAND,\nchoose 'Complete RedNAND Setup'.\nYou will be asked to switch your\nSD card during the process.\nCheck the other menu entries for\nmore options.\n \nCredits:\n* Archshift (for Decrypt9)\n* patois (for Brahma)\n* mid-kid (for CakeHax)\n* Datalogger (for testing)\n* Shadowtrance (for testing)\n* everyone else who helped me!");
     }
         
     for (u32 i = 0; i < currMenu->n_entries; i++) { // draw menu entries / selection []

@@ -20,7 +20,7 @@ export TARGET	:=	EmuNAND9
 BUILD		:=	build
 SOURCES		:=	source source/fatfs source/abstraction
 DATA		:=	data
-INCLUDES	:=	source source/fatfs
+INCLUDES	:=	source source/font source/fatfs
 
 #---------------------------------------------------------------------------------
 # THEME: if set to anything, name of the themes file folder inside resources
@@ -43,6 +43,16 @@ CFLAGS	+=	-DBUILD_NAME="\"$(TARGET) (`date +'%Y/%m/%d'`)\""
 
 ifneq ($(strip $(THEME)),)
 CFLAGS	+=	-DUSE_THEME=\"\/$(THEME)\"
+endif
+
+ifeq ($(FONT),ORIG)
+CFLAGS	+=	-DFONT_ORIGINAL
+else ifeq ($(FONT),6X10)
+CFLAGS	+=	-DFONT_6X10
+else ifeq ($(FONT),ACORN)
+CFLAGS	+=	-DFONT_ACORN
+else
+CFLAGS	+=	-DFONT_6X10
 endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
