@@ -2,6 +2,9 @@
 _Open source EmuNAND SD formatter & manager for the 3DS console
 aka. "The final nail in the coffin of GW software for GW non-owners"_
 
+## Important note
+This is __discontinued__. While it most likely still works for everything that you want to do, bugs will no more be fixed and new versions will not come. Use [GodMode9](https://github.com/d0k3/GodMode9) instead, which is a superior alternative to EmuNAND9.
+
 ## What can this do?
 Actually, a lot! See this incomplete list:
 * Completely setup a fresh SD card for EmuNAND, including cloning SysNAND to EmuNAND and autosetup of a homebrew starter pack

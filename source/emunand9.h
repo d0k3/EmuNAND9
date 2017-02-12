@@ -31,9 +31,9 @@ typedef struct {
 } __attribute__((packed)) MbrPartitionInfo;
 
 typedef struct {
-    char text[446];
+    u8  data[446];
     MbrPartitionInfo partitions[4]; 
-    u16  magic;         // 0xAA55
+    u16 magic;         // 0xAA55
 } __attribute__((packed)) MbrInfo;
 
 typedef struct {
