@@ -610,7 +610,7 @@ u32 FormatSdCard(u32 param)
     
     // make a new MBR
     memset(mbr_info, 0x00, 0x200);
-    snprintf(mbr_info->text, 445, "%-*.*s%-16.16s%-8.8s%08X%-8.8s%08X%-8.8s%08X%-8.8s%08X%-8.8s%08X",
+    snprintf(mbr_info->data, 445, "%-*.*s%-16.16s%-8.8s%08X%-8.8s%08X%-8.8s%08X%-8.8s%08X%-8.8s%08X",
         setup_emunand ? 16 : 0, setup_emunand ? 16 : 0,
         setup_emunand ? "GATEWAYNAND" : "", "EMUNAND9SD",
         "SDCSIZE:", (unsigned int) sd_size_sectors,
