@@ -139,6 +139,9 @@ gateway: common
 a9lh: common
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile EXEC_METHOD=A9LH
 
+firm: a9lh
+	@firmtool build $(OUTPUT).firm -n 0x23F00000 -e 0 -D $(OUTPUT).elf -A 0x23F00000 -C NDMA -i
+
 cakehax: submodules common
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile EXEC_METHOD=GATEWAY
 	@make dir_out=$(OUTPUT_D) name=$(TARGET).dat -C CakeHax bigpayload
@@ -163,12 +166,14 @@ release:
 	@-make --no-print-directory cakerop
 	@rm -fr $(BUILD) $(OUTPUT).bin $(OUTPUT).elf
 	@-make --no-print-directory brahma
+	@-make --no-print-directory firm
 	@[ -d $(RELEASE) ] || mkdir -p $(RELEASE)
 	@[ -d $(RELEASE)/3DS ] || mkdir -p $(RELEASE)/3DS
 	@[ -d $(RELEASE)/3DS/$(TARGET) ] || mkdir -p $(RELEASE)/3DS/$(TARGET)
 	@[ -d $(RELEASE)/files9 ] || mkdir -p $(RELEASE)/files9
 	@cp $(OUTPUT_D)/Launcher.dat $(RELEASE)
 	@-cp $(OUTPUT).bin $(RELEASE)
+	@-cp $(OUTPUT).firm $(RELEASE)
 	@-cp $(OUTPUT).dat $(RELEASE)
 	@-cp $(OUTPUT).nds $(RELEASE)
 	@-cp $(OUTPUT).3dsx $(RELEASE)/3DS/$(TARGET)
