@@ -34,7 +34,7 @@ ARCH	:=	-mthumb -mthumb-interwork -flto
 
 CFLAGS	:=	-g -Wall -Wextra -Wpedantic -pedantic -O2\
 			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
-			-ffast-math -std=c99\
+			-ffast-math -std=gnu11\
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DEXEC_$(EXEC_METHOD) -DARM9 -D_GNU_SOURCE
