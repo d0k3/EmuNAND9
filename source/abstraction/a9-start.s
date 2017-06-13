@@ -1,5 +1,3 @@
-#ifdef EXEC_HAX
-
 .section .text.start
 .global _start
 .align 4
@@ -91,5 +89,3 @@ _start:
     b main
 
 .pool
-
-#endif // EXEC_HAX
