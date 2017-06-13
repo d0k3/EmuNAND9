@@ -76,7 +76,7 @@ int main(int argc, char** argv)
         bottom_screen = fb[2];
     } else {
         // outdated entrypoints
-        #ifdef EXEC_HAX
+        #ifdef EXEC_A9LH
             top_screen = (u8*)(*(u32*)0x23FFFE00);
             bottom_screen = (u8*)(*(u32*)0x23FFFE08);
         #elif defined(EXEC_GATEWAY)
