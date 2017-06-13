@@ -1,3 +1,5 @@
+#ifdef EXEC_A9LH
+
 .section .text.start
 .global _start
 .align 4
@@ -89,3 +91,5 @@ _start:
     b main
 
 .pool
+
+#endif // EXEC_A9LH
