@@ -83,7 +83,8 @@ int main(int argc, char** argv)
             top_screen = (u8*)(*(u32*)((uint32_t)0x080FFFC0 + 4 * (*(u32*)0x080FFFD8 & 1)));
             bottom_screen = (u8*)(*(u32*)((uint32_t)0x080FFFD0 + 4 * (*(u32*)0x080FFFDC & 1)));
         #else
-            #error "Unknown Execution Method"
+            Debug("Unknown Execution Method");
+            return 1;
         #endif
     }
 
