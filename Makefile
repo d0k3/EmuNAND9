@@ -32,7 +32,7 @@ THEME	:=
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork -flto
 
-CFLAGS	:=	-g -Wall -Wextra -Wpedantic -pedantic -O2\
+CFLAGS	:=	-g -Wall -Wextra -Wpedantic -Wno-main -O2\
 			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 			-ffast-math -std=gnu11\
 			$(ARCH)
@@ -122,7 +122,7 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 .PHONY: common clean all gateway a9lh cakehax cakerop brahma release
 
 #---------------------------------------------------------------------------------
-all: a9lh
+all: firm
 
 common:
 	@[ -d $(OUTPUT_D) ] || mkdir -p $(OUTPUT_D)
