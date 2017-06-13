@@ -76,12 +76,12 @@ int main(int argc, char** argv)
         bottom_screen = fb[2];
     } else {
         // outdated entrypoints
-        #ifdef EXEC_GATEWAY
-            top_screen = (u8*)(*(u32*)((uint32_t)0x080FFFC0 + 4 * (*(u32*)0x080FFFD8 & 1)));
-            bottom_screen = (u8*)(*(u32*)((uint32_t)0x080FFFD0 + 4 * (*(u32*)0x080FFFDC & 1)));
-        #elif defined(EXEC_A9LH)
+        #ifdef EXEC_HAX
             top_screen = (u8*)(*(u32*)0x23FFFE00);
             bottom_screen = (u8*)(*(u32*)0x23FFFE08);
+        #elif defined(EXEC_GATEWAY)
+            top_screen = (u8*)(*(u32*)((uint32_t)0x080FFFC0 + 4 * (*(u32*)0x080FFFD8 & 1)));
+            bottom_screen = (u8*)(*(u32*)((uint32_t)0x080FFFD0 + 4 * (*(u32*)0x080FFFDC & 1)));
         #else
             #error "Unknown Execution Method"
         #endif
