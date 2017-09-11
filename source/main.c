@@ -26,10 +26,10 @@ MenuInfo menu[] =
     {
         "SD Format Options", 4,
         {
-            { "Format SD (no EmuNAND)",       &FormatSdCard,          0 },
-            { "Format SD (EmuNAND default)",  &FormatSdCard,          SD_SETUP_EMUNAND },
-            { "Format SD (EmuNAND minsize)",  &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_MINSIZE },
-            { "Format SD (EmuNAND legacy)",   &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
+            { "Format SD (No EmuNAND)",       &FormatSdCard,          0 },
+            { "Format SD (EmuNAND Default)",  &FormatSdCard,          SD_SETUP_EMUNAND },
+            { "Format SD (EmuNAND Minsize)",  &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_MINSIZE },
+            { "Format SD (EmuNAND Legacy)",   &FormatSdCard,          SD_SETUP_EMUNAND | SD_SETUP_LEGACY }
         }
     },
     {
@@ -37,10 +37,10 @@ MenuInfo menu[] =
         {
             { "Clone SysNAND to EmuNAND",     &InjectNand,            N_EMUNAND | N_DIRECTCOPY },
             { "Clone SysNAND to RedNAND",     &InjectNand,            N_EMUNAND | N_WREDNAND | N_DIRECTCOPY },
-            { "Restore file to EmuNAND",      &InjectNand,            N_EMUNAND },
-            { "Restore file to RedNAND",      &InjectNand,            N_EMUNAND | N_WREDNAND},
-            { "Backup SysNAND to file",       &DumpNand,              0 },
-            { "Backup EmuNAND to file",       &DumpNand,              N_EMUNAND },
+            { "Restore File to EmuNAND",      &InjectNand,            N_EMUNAND },
+            { "Restore File to RedNAND",      &InjectNand,            N_EMUNAND | N_WREDNAND},
+            { "Backup SysNAND to File",       &DumpNand,              0 },
+            { "Backup EmuNAND to File",       &DumpNand,              N_EMUNAND },
             { "Convert EmuNAND -> RedNAND",   &ConvertEmuNand,        N_EMUNAND | N_WREDNAND },
             { "Convert RedNAND -> EmuNAND",   &ConvertEmuNand,        N_EMUNAND }
         }
@@ -64,9 +64,30 @@ void PowerOff()
     while (true);
 }
 
+u8 *top_screen, *bottom_screen;
 
-int main()
+int main(int argc, char** argv)
 {
+    // Fetch the framebuffer addresses
+    if(argc >= 2) {
+        // newer entrypoints
+        u8 **fb = (u8 **)(void *)argv[1];
+        top_screen = fb[0];
+        bottom_screen = fb[2];
+    } else {
+        // outdated entrypoints
+        #ifdef EXEC_A9LH
+            top_screen = (u8*)(*(u32*)0x23FFFE00);
+            bottom_screen = (u8*)(*(u32*)0x23FFFE08);
+        #elif defined(EXEC_GATEWAY)
+            top_screen = (u8*)(*(u32*)((uint32_t)0x080FFFC0 + 4 * (*(u32*)0x080FFFD8 & 1)));
+            bottom_screen = (u8*)(*(u32*)((uint32_t)0x080FFFD0 + 4 * (*(u32*)0x080FFFDC & 1)));
+        #else
+            Debug("Unknown Execution Method");
+            return 1;
+        #endif
+    }
+
     ClearScreenFull(true, true);
     InitFS();
 
